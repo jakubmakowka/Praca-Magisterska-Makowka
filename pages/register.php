@@ -1,17 +1,66 @@
-<!--
-=========================================================
-* Corporate UI - v1.0.0
-=========================================================
+<?php
+include 'database.php';
 
-* Product Page: https://www.creative-tim.com/product/corporate-ui
-* Copyright 2022 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://www.creative-tim.com/license)
-* Coded by Creative Tim
+$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+if (mysqli_connect_errno()) {
+	// If there is an error with the connection, stop the script and display the error.
+	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+}
+// Now we check if the data was submitted, isset() function will check if the data exists.
+if (!isset($_POST['username'], $_POST['password'], $_POST['email'])) {
+	// Could not get the data that should have been sent.
+	exit('Please complete the registration form!');
+}
+// Make sure the submitted registration values are not empty.
+if (empty($_POST['username']) || empty($_POST['password']) || empty($_POST['email'])) {
+	// One or more values are empty.
+	exit('Please complete the registration form');
+}
+// Validating Form Data
+// Email Validation
+if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+	exit('Email is not valid!');
+}
+// Invalid Characters Validation
+if (preg_match('/^[a-zA-Z0-9]+$/', $_POST['username']) == 0) {
+    exit('Username is not valid!');
+}
+// Character Length Check
+if (strlen($_POST['password']) > 20 || strlen($_POST['password']) < 5) {
+	exit('Password must be between 5 and 20 characters long!');
+}
 
-=========================================================
+// We need to check if the account with that username exists.
+if ($stmt = $con->prepare('SELECT id, password FROM accounts WHERE username = ?')) {
+	// Bind parameters (s = string, i = int, b = blob, etc), hash the password using the PHP password_hash function.
+	$stmt->bind_param('s', $_POST['username']);
+	$stmt->execute();
+	$stmt->store_result();
+	// Store the result so we can check if the account exists in the database.
+	if ($stmt->num_rows > 0) {
+		// Username already exists
+		$result='Username exists, please choose another!';
+	} else {
+		// Username doesn't exist, insert new account as inactive
+        if ($stmt = $con->prepare('INSERT INTO accounts (username, password, email, active) VALUES (?, ?, ?, 0)')) {
+            // We do not want to expose passwords in our database, so hash the password and use password_verify when a user logs in.
+            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $stmt->bind_param('sss', $_POST['username'], $password, $_POST['email']);
+            $stmt->execute();
+            $result='You have successfully registered! You can now login!';
+        } else {
+            // Something is wrong with the SQL statement, so you must check to make sure your accounts table exists with all three fields.
+            $result='Could not prepare statement!';
+        }
+	}
+	$stmt->close();
+} else {
+	// Something is wrong with the SQL statement, so you must check to make sure your accounts table exists with all 3 fields.
+	$result='Could not prepare statement!';
+}
+$con->close();
+?>
 
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
--->
 <!DOCTYPE html>
 <html lang="pl">
 
@@ -121,45 +170,7 @@
             <div class="col-md-4 d-flex flex-column mx-auto">
               <div class="card card-plain mt-8">
                 <div class="card-header pb-0 text-left bg-transparent">
-                  <h3 class="font-weight-black text-dark display-6">Sign up</h3>
-                  <p class="mb-0">Nice to meet you! Please enter your details.</p>
-                </div>
-                <div class="card-body">
-                  <form role="form" action="register.php" method="post">
-                    <label>Name</label>
-                    <div class="mb-3">
-                      <input type="text" class="form-control" placeholder="Enter your name" aria-label="Name" aria-describedby="name-addon" name="username" id="username" required>
-                    </div>
-                    <label>Email Address</label>
-                    <div class="mb-3">
-                      <input type="email" class="form-control" placeholder="Enter your email address" aria-label="Email" aria-describedby="email-addon" name="email" id="email" required>
-                    </div>
-                    <label>Password</label>
-                    <div class="mb-3">
-                      <input type="password" class="form-control" placeholder="Create a password" aria-label="Password" aria-describedby="password-addon" name="password" id="password" required>
-                    </div>
-                    <div class="form-check form-check-info text-left mb-0">
-                      <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-                      <label class="font-weight-normal text-dark mb-0" for="flexCheckDefault">
-                        I agree the <a href="javascript:;" class="text-dark font-weight-bold">Terms and Conditions</a>.
-                      </label>
-                    </div>
-                    <div class="text-center">
-                      <button type="submit" class="btn btn-dark w-100 mt-4 mb-3">Sign up</button>
-                      <button type="button" class="btn btn-white btn-icon w-100 mb-3">
-                        <span class="btn-inner--icon me-1">
-                          <img class="w-5" src="../assets/img/logos/google-logo.svg" alt="google-logo" />
-                        </span>
-                        <span class="btn-inner--text">Sign up with Google</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-                <div class="card-footer text-center pt-0 px-lg-2 px-1">
-                  <p class="mb-4 text-xs mx-auto">
-                    Already have an account?
-                    <a href="./sign-in.html" class="text-dark font-weight-bold">Sign in</a>
-                  </p>
+				  <?php echo '<h3 class="font-weight-black text-dark display-6">'.$result.'</div>'; ?>
                 </div>
               </div>
             </div>

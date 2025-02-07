@@ -1,18 +1,60 @@
-<!--
-=========================================================
-* Corporate UI - v1.0.0
-=========================================================
+<?php
+session_start();
+// Change this to your connection info.
+include 'database.php';
+// Try and connect using the info above.
+$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+if (mysqli_connect_errno()) {
+    // If there is an error with the connection, stop the script and display the error.
+    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+}
 
-* Product Page: https://www.creative-tim.com/product/corporate-ui
-* Copyright 2022 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://www.creative-tim.com/license)
-* Coded by Creative Tim
+// Now we check if the data from the login form was submitted, isset() will check if the data exists.
+if (!isset($_POST['username'], $_POST['password'])) {
+    // Could not get the data that should have been sent.
+    exit('Please fill both the username and password fields!');
+}
 
-=========================================================
+// Prepare our SQL, preparing the SQL statement will prevent SQL injection.
+if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE username = ?')) {
+    // Bind parameters (s = string, i = int, b = blob, etc), in our case the username is a string so we use "s"
+    $stmt->bind_param('s', $_POST['username']);
+    $stmt->execute();
+    // Store the result so we can check if the account exists in the database.
+    $stmt->store_result();
 
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
--->
-<!DOCTYPE html>
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($id, $password, $active);
+        $stmt->fetch();
+
+        // Check if the account is active
+        if ($active == 1) {
+            // Account exists and is active, now we verify the password.
+            if (password_verify($_POST['password'], $password)) {
+                // Verification success! User has logged-in!
+                // Create sessions, so we know the user is logged in, they basically act like cookies but remember the data on the server.
+                session_regenerate_id(true);
+                $_SESSION['loggedin'] = TRUE;
+                $_SESSION['name'] = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
+                $_SESSION['id'] = $id;
+                header('Location: dashboard.html');
+                exit;
+            } else {
+                // Incorrect password
+                $result = 'Incorrect username and/or password!';
+            }
+        } else {
+            // Account is not active, waiting for administrator approval
+            $result = 'Your account is inactive. Please wait for administrator approval.';
+        }
+    } else {
+        // Incorrect username
+        $result = 'Incorrect username and/or password!';
+    }
+    $stmt->close();
+}
+?>
+
 <html lang="pl">
 
 <head>
@@ -77,16 +119,16 @@
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 text-dark font-weight-bold" href="../pages/sign-up.html">
-                    <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class=" text-dark  me-1">
+                  <a class="nav-link d-flex align-items-center me-2 " href="../pages/sign-up.html">
+                    <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="opacity-6 me-1">
                       <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
                     </svg>
                     Sign Up
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 " href="../pages/sign-in.html">
-                    <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="opacity-6 me-1">
+                  <a class="nav-link d-flex align-items-center me-2 text-dark font-weight-bold" href="../pages/sign-in.html">
+                    <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class=" text-dark  me-1">
                       <path fill-rule="evenodd" d="M15.75 1.5a6.75 6.75 0 00-6.651 7.906c.067.39-.032.717-.221.906l-6.5 6.499a3 3 0 00-.878 2.121v2.818c0 .414.336.75.75.75H6a.75.75 0 00.75-.75v-1.5h1.5A.75.75 0 009 19.5V18h1.5a.75.75 0 00.53-.22l2.658-2.658c.19-.189.517-.288.906-.22A6.75 6.75 0 1015.75 1.5zm0 3a.75.75 0 000 1.5A2.25 2.25 0 0118 8.25a.75.75 0 001.5 0 3.75 3.75 0 00-3.75-3.75z" clip-rule="evenodd" />
                     </svg>
                     Sign In
@@ -105,61 +147,57 @@
       <div class="page-header min-vh-100">
         <div class="container">
           <div class="row">
-            <div class="col-md-6">
-              <div class="position-absolute w-40 top-0 start-0 h-100 d-md-block d-none">
-                <div class="oblique-image position-absolute d-flex fixed-top ms-auto h-100 z-index-0 bg-cover me-n8" style="background-image:url('../assets/img/image-sign-up.jpg')">
-                  <div class="my-auto text-start max-width-350 ms-7">
-                    <h1 class="mt-3 text-white font-weight-bolder">Start your <br> new journey.</h1>
-                    <p class="text-white text-lg mt-4 mb-4">Welcome on our site!</p>
-                  </div>
-                  <div class="text-start position-absolute fixed-bottom ms-7">
-                    <h6 class="text-white text-sm mb-5">Copyright © 2022 Corporate UI Design System by Creative Tim.</h6>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4 d-flex flex-column mx-auto">
+            <div class="col-xl-4 col-md-6 d-flex flex-column mx-auto">
               <div class="card card-plain mt-8">
                 <div class="card-header pb-0 text-left bg-transparent">
-                  <h3 class="font-weight-black text-dark display-6">Sign up</h3>
-                  <p class="mb-0">Nice to meet you! Please enter your details.</p>
+                  <h3 class="font-weight-black text-dark display-6">Welcome back</h3>
+                  <p class="mb-0">Welcome back! Please enter your details.</p>
                 </div>
                 <div class="card-body">
-                  <form role="form" action="register.php" method="post">
+                  <form role="form" action="authenticate.php" method="post">
                     <label>Name</label>
                     <div class="mb-3">
                       <input type="text" class="form-control" placeholder="Enter your name" aria-label="Name" aria-describedby="name-addon" name="username" id="username" required>
                     </div>
-                    <label>Email Address</label>
-                    <div class="mb-3">
-                      <input type="email" class="form-control" placeholder="Enter your email address" aria-label="Email" aria-describedby="email-addon" name="email" id="email" required>
-                    </div>
                     <label>Password</label>
                     <div class="mb-3">
-                      <input type="password" class="form-control" placeholder="Create a password" aria-label="Password" aria-describedby="password-addon" name="password" id="password" required>
+                      <input type="password" class="form-control" placeholder="Enter password" aria-label="Password" aria-describedby="password-addon" name="password" id="password" required>
                     </div>
-                    <div class="form-check form-check-info text-left mb-0">
-                      <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-                      <label class="font-weight-normal text-dark mb-0" for="flexCheckDefault">
-                        I agree the <a href="javascript:;" class="text-dark font-weight-bold">Terms and Conditions</a>.
-                      </label>
+                    <div class="d-flex align-items-center">
+                      <div class="form-check form-check-info text-left mb-0">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="font-weight-normal text-dark mb-0" for="flexCheckDefault">
+                          Remember for 14 days
+                        </label>
+                      </div>
+                      <a href="javascript:;" class="text-xs font-weight-bold ms-auto">Forgot password?</a>
                     </div>
                     <div class="text-center">
-                      <button type="submit" class="btn btn-dark w-100 mt-4 mb-3">Sign up</button>
+                      <button type="submit" class="btn btn-dark w-100 mt-4 mb-3">Sign in</button>
                       <button type="button" class="btn btn-white btn-icon w-100 mb-3">
                         <span class="btn-inner--icon me-1">
                           <img class="w-5" src="../assets/img/logos/google-logo.svg" alt="google-logo" />
                         </span>
-                        <span class="btn-inner--text">Sign up with Google</span>
+                        <span class="btn-inner--text">Sign in with Google</span>
                       </button>
                     </div>
                   </form>
                 </div>
                 <div class="card-footer text-center pt-0 px-lg-2 px-1">
                   <p class="mb-4 text-xs mx-auto">
-                    Already have an account?
-                    <a href="./sign-in.html" class="text-dark font-weight-bold">Sign in</a>
+                    Don't have an account?
+                    <a href="./sign-up.html" class="text-dark font-weight-bold">Sign up</a>
                   </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="position-absolute w-40 top-0 end-0 h-100 d-md-block d-none">
+                <div class="oblique-image position-absolute fixed-top ms-auto h-100 z-index-0 bg-cover ms-n8" style="background-image:url('../assets/img/image-sign-in.jpg')">
+                  <div class="blur mt-12 p-4 text-center border border-white border-radius-md position-absolute m-4">
+                    <?php if (isset($result)) echo '<h2 class="mt-3 text-dark font-weight-bold">'.htmlspecialchars($result, ENT_QUOTES, 'UTF-8').'</h2>'; ?>
+                    <h6 class="text-dark text-sm mt-5">Copyright © 2022 Corporate UI Design System by Creative Tim.</h6>
+                  </div>
                 </div>
               </div>
             </div>
