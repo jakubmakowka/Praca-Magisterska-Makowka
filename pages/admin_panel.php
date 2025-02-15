@@ -1,52 +1,86 @@
-<!--
-=========================================================
-* Corporate UI - v1.0.0
-=========================================================
+<?php
+session_start();
+// Change this to your connection info.
+include 'database.php';
 
-* Product Page: https://www.creative-tim.com/product/corporate-ui
-* Copyright 2022 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://www.creative-tim.com/license)
-* Coded by Creative Tim
+// Sprawdź, czy użytkownik jest zalogowany
+if (!isset($_SESSION['loggedin']) || !isset($_SESSION['name']) || $_SESSION['name'] !== 'makowka') {
+    // Jeśli użytkownik nie jest zalogowany lub nie jest to "makowka", przekieruj go do strony logowania
+    header('Location: sign-in.html');
+    exit;
+}
 
-=========================================================
+// Try and connect using the info above.
+$conn = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+if ( mysqli_connect_errno() ) {
+    // If there is an error with the connection, stop the script and display the error.
+    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+}
 
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
--->
+// Pobierz listę nieaktywnych kont
+$result = $conn->query("SELECT * FROM accounts WHERE active = 0");
+$pending_users = [];
+while ($row = $result->fetch_assoc()) {
+    $pending_users[] = $row;
+}
+
+// Potwierdzenie rejestracji
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
+    $username = $_POST['confirm'];
+    $stmt = $conn->prepare('UPDATE accounts SET active = 1 WHERE username = ?');
+    $stmt->bind_param('s', $username);
+    $stmt->execute();
+    $stmt->close();
+    // Aktualizacja listy
+    $result = $conn->query("SELECT * FROM accounts WHERE active = 0");
+    $pending_users = [];
+    while ($row = $result->fetch_assoc()) {
+        $pending_users[] = $row;
+    }
+}
+?>
 <!DOCTYPE html>
-<html lang="pl">
-
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
-  <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-  <title>
-    Corporate UI by Creative Tim
-  </title>
-  <!--     Fonts and icons     -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet" />
-  <!-- Nucleo Icons -->
-  <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
-  <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
-  <!-- Font Awesome Icons -->
-  <script src="https://kit.fontawesome.com/349ee9c857.js" crossorigin="anonymous"></script>
-  <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
-  <!-- CSS Files -->
-  <link id="pagestyle" href="../assets/css/corporate-ui-dashboard.css?v=1.0.0" rel="stylesheet" />
+    <meta charset="utf-8">
+    <title>Admin Panel</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
 </head>
+<body>
+    <h2>Pending Registrations</h2>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+        <?php foreach ($pending_users as $user) : ?>
+            <tr>
+                <td><?= $user['username'] ?></td>
+                <td><?= $user['email'] ?></td>
+                <td>
+                    <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+                        <input type="hidden" name="confirm" value="<?= $user['username'] ?>">
+                        <input type="submit" value="Confirm">
+                    </form>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+</body>
 
-<body class="g-sidenav-show  bg-gray-100">
+<body class="g-sidenav-show bg-gray-100">
   <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 bg-slate-900 fixed-start " id="sidenav-main">
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
       <a class="navbar-brand d-flex align-items-center m-0" href=" https://demos.creative-tim.com/corporate-ui-dashboard/pages/dashboard.html " target="_blank">
-        <span class="font-weight-bold text-lg">Wspieracz</span>
+        <span class="font-weight-bold text-lg">Corporate UI</span>
       </a>
     </div>
     <div class="collapse navbar-collapse px-4  w-auto " id="sidenav-collapse-main">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" href="../pages/dashboard.html">
+          <a class="nav-link  active" href="../pages/dashboard.html">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>dashboard</title>
@@ -59,11 +93,11 @@
                 </g>
               </svg>
             </div>
-            <span class="nav-link-text ms-1">Raporty</span>
+            <span class="nav-link-text ms-1">Dashboard</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link  active" href="../pages/tables.html">
+          <a class="nav-link  " href="../pages/tables.html">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>table</title>
@@ -77,7 +111,7 @@
                 </g>
               </svg>
             </div>
-            <span class="nav-link-text ms-1">Wspomóż nas</span>
+            <span class="nav-link-text ms-1">Tables</span>
           </a>
         </li>
         <li class="nav-item">
@@ -93,7 +127,7 @@
                 </g>
               </svg>
             </div>
-            <span class="nav-link-text ms-1">Portfel</span>
+            <span class="nav-link-text ms-1">Wallet</span>
           </a>
         </li>
         <li class="nav-item mt-2">
@@ -101,27 +135,27 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" class="ms-2" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
               <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
             </svg>
-            <span class="font-weight-normal text-md ms-2">Zarządzanie kontem</span>
+            <span class="font-weight-normal text-md ms-2">Account Pages</span>
           </div>
         </li>
         <li class="nav-item border-start my-0 pt-2">
           <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/profile.html">
-            <span class="nav-link-text ms-1">Profil</span>
+            <span class="nav-link-text ms-1">Profile</span>
           </a>
         </li>
         <li class="nav-item border-start my-0 pt-2">
           <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/sign-in.html">
-            <span class="nav-link-text ms-1">Zaloguj się</span>
+            <span class="nav-link-text ms-1">Sign In</span>
           </a>
         </li>
         <li class="nav-item border-start my-0 pt-2">
           <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/sign-up.html">
-            <span class="nav-link-text ms-1">Zarejestruj się</span>
+            <span class="nav-link-text ms-1">Sign Up</span>
           </a>
         </li>
         <li class="nav-item border-start my-0 pt-2">
           <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/logout.php">
-            <span class="nav-link-text ms-1">Wyloguj się</span>
+            <span class="nav-link-text ms-1">Logout</span>
           </a>
         </li>
       </ul>
@@ -130,10 +164,10 @@
       <div class="card border-radius-md" id="sidenavCard">
         <div class="card-body  text-start  p-3 w-100">
           <div class="docs-info">
-            <h6 class="font-weight-bold up mb-2">Potrzebujesz pomocy?</h6>
-            <p class="text-sm font-weight-normal">Sprawdź naszą dokumentację:</p>
-            <a href="https://www.creative-tim.com/learning-lab/bootstrap/license/corporate-ui-dashboard" target="_blank" class="font-weight-bold text-sm mb-0 icon-move-right w-100 mb-0">
-              Dokumentacja
+            <h6 class="font-weight-bold up mb-2">Need help?</h6>
+            <p class="text-sm font-weight-normal">Please check our docs:</p>
+            <a href="https://www.creative-tim.com/learning-lab/bootstrap/license/corporate-ui-dashboard" target="_blank" class="font-weight-bold text-sm mb-0 icon-move-right mt-auto w-100 mb-0">
+              Documentation
               <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
             </a>
           </div>
@@ -147,10 +181,10 @@
       <div class="container-fluid py-1 px-2">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent mb-1 pb-0 pt-1 px-0 me-sm-6 me-5">
-            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Aplikacja</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Wspieranie</li>
+            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Dashboard</a></li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Dashboard</li>
           </ol>
-          <h6 class="font-weight-bold mb-0">Wspieranie</h6>
+          <h6 class="font-weight-bold mb-0">Dashboard</h6>
         </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -160,7 +194,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
               </span>
-              <input type="text" class="form-control ps-0" placeholder="Szukaj">
+              <input type="text" class="form-control ps-0" placeholder="Search">
             </div>
           </div>
           <ul class="navbar-nav  justify-content-end">
@@ -256,7 +290,7 @@
               </ul>
             </li>
             <li class="nav-item ps-2 d-flex align-items-center">
-              <a href="../pages/profile.html" class="nav-link text-body p-0">
+              <a href="javascript:;" class="nav-link text-body p-0">
                 <img src="../assets/img/team-2.jpg" class="avatar avatar-sm" alt="avatar" />
               </a>
             </li>
@@ -267,27 +301,34 @@
     <!-- End Navbar -->
     <div class="container-fluid py-4 px-5">
       <div class="row">
-        <div class="col-12">
-          <div class="card card-background card-background-after-none align-items-start mt-4 mb-5">
-            <div class="full-background" style="background-image: url('../assets/img/header-blue-purple.jpg')"></div>
-            <div class="card-body text-start p-4 w-100">
-              <h3 class="text-white mb-2">Collect your benefits 🔥</h3>
-              <p class="mb-4 font-weight-semibold">
-                Check all the advantages and choose the best.
-              </p>
-              <button type="button" class="btn btn-outline-white btn-blur btn-icon d-flex align-items-center mb-0">
-                <span class="btn-inner--icon">
-                  <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="d-block me-2">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14ZM6.61036 4.52196C6.34186 4.34296 5.99664 4.32627 5.71212 4.47854C5.42761 4.63081 5.25 4.92731 5.25 5.25V8.75C5.25 9.0727 5.42761 9.36924 5.71212 9.52149C5.99664 9.67374 6.34186 9.65703 6.61036 9.47809L9.23536 7.72809C9.47879 7.56577 9.625 7.2926 9.625 7C9.625 6.70744 9.47879 6.43424 9.23536 6.27196L6.61036 4.52196Z" />
-                  </svg>
-                </span>
-                <span class="btn-inner--text">Watch more</span>
-              </button>
-              <img src="../assets/img/3d-cube.png" alt="3d-cube" class="position-absolute top-0 end-1 w-25 max-width-200 mt-n6 d-sm-block d-none" />
+        <div class="col-md-12">
+          <div class="d-md-flex align-items-center mb-3 mx-2">
+            <div class="mb-md-0 mb-3">
+              <h3 class="font-weight-bold mb-0">Pending Registrations</h3>
+                <table>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                    <?php foreach ($pending_users as $user) : ?>
+                        <tr>
+                            <td><?= $user['username'] ?></td>
+                            <td><?= $user['email'] ?></td>
+                            <td>
+                                <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+                                    <input type="hidden" name="confirm" value="<?= $user['username'] ?>">
+                                    <input type="submit" value="Confirm">
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
             </div>
           </div>
         </div>
       </div>
+      <hr class="my-0">
       <div class="row">
         <div class="position-relative overflow-hidden">
           <div class="swiper mySwiper mt-4 mb-2">
@@ -408,32 +449,52 @@
           <div class="swiper-button-next"></div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="card border shadow-xs mb-4">
+      <div class="row my-4">
+        <div class="col-lg-4 col-md-6 mb-md-0 mb-4">
+          <div class="card shadow-xs border h-100">
+            <div class="card-header pb-0">
+              <h6 class="font-weight-semibold text-lg mb-0">Balances over time</h6>
+              <p class="text-sm">Here you have details about the balance.</p>
+              <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+                <label class="btn btn-white px-3 mb-0" for="btnradio1">12 months</label>
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+                <label class="btn btn-white px-3 mb-0" for="btnradio2">30 days</label>
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+                <label class="btn btn-white px-3 mb-0" for="btnradio3">7 days</label>
+              </div>
+            </div>
+            <div class="card-body py-3">
+              <div class="chart mb-2">
+                <canvas id="chart-bars" class="chart-canvas" height="240"></canvas>
+              </div>
+              <button class="btn btn-white mb-0 ms-auto">View report</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8 col-md-6">
+          <div class="card shadow-xs border">
             <div class="card-header border-bottom pb-0">
-              <div class="d-sm-flex align-items-center">
+              <div class="d-sm-flex align-items-center mb-3">
                 <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Members list</h6>
-                  <p class="text-sm">See information about all members</p>
+                  <h6 class="font-weight-semibold text-lg mb-0">Recent transactions</h6>
+                  <p class="text-sm mb-sm-0 mb-2">These are details about the last transactions</p>
                 </div>
                 <div class="ms-auto d-flex">
-                  <button type="button" class="btn btn-sm btn-white me-2">
-                    View all
+                  <button type="button" class="btn btn-sm btn-white mb-0 me-2">
+                    View report
                   </button>
-                  <button type="button" class="btn btn-sm btn-dark btn-icon d-flex align-items-center me-2">
+                  <button type="button" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0">
                     <span class="btn-inner--icon">
-                      <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="d-block me-2">
-                        <path d="M6.25 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM3.25 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM19.75 7.5a.75.75 0 00-1.5 0v2.25H16a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H22a.75.75 0 000-1.5h-2.25V7.5z" />
+                      <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                       </svg>
                     </span>
-                    <span class="btn-inner--text">Add member</span>
+                    <span class="btn-inner--text">Download</span>
                   </button>
                 </div>
               </div>
-            </div>
-            <div class="card-body px-0 py-0">
-              <div class="border-bottom py-3 px-3 d-sm-flex align-items-center">
+              <div class="pb-3 d-sm-flex align-items-center">
                 <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable1" autocomplete="off" checked>
                   <label class="btn btn-white px-3 mb-0" for="btnradiotable1">All</label>
@@ -448,241 +509,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                     </svg>
                   </span>
-                  <input type="text" class="form-control" placeholder="Szukaj">
-                </div>
-              </div>
-              <div class="table-responsive p-0">
-                <table class="table align-items-center mb-0">
-                  <thead class="bg-gray-100">
-                    <tr>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7">Member</th>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Function</th>
-                      <th class="text-center text-secondary text-xs font-weight-semibold opacity-7">Status</th>
-                      <th class="text-center text-secondary text-xs font-weight-semibold opacity-7">Employed</th>
-                      <th class="text-secondary opacity-7"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-2.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user1">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">John Michael</h6>
-                            <p class="text-sm text-secondary mb-0">john@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Manager</p>
-                        <p class="text-sm text-secondary mb-0">Organization</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-success text-success bg-success">Online</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">23/04/18</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-3.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user2">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Alexa Liras</h6>
-                            <p class="text-sm text-secondary mb-0">alexa@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Programator</p>
-                        <p class="text-sm text-secondary mb-0">Developer</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-secondary text-secondary bg-secondary">Offline</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">11/01/19</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-1.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user3">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Laurent Perrier</h6>
-                            <p class="text-sm text-secondary mb-0">laurent@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Executive</p>
-                        <p class="text-sm text-secondary mb-0">Projects</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-success text-success bg-success">Online</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">19/09/17</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/marie.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user4">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Michael Levi</h6>
-                            <p class="text-sm text-secondary mb-0">michael@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Programator</p>
-                        <p class="text-sm text-secondary mb-0">Developer</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-success text-success bg-success">Online</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">24/12/08</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-5.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user5">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Richard Gran</h6>
-                            <p class="text-sm text-secondary mb-0">richard@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Manager</p>
-                        <p class="text-sm text-secondary mb-0">Executive</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-secondary text-secondary bg-secondary">Offline</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">04/10/21</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-6.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user6">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Miriam Eric</h6>
-                            <p class="text-sm text-secondary mb-0">miriam@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Programtor</p>
-                        <p class="text-sm text-secondary mb-0">Developer</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-secondary text-secondary bg-secondary">Offline</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">14/09/20</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="border-top py-3 px-3 d-flex align-items-center">
-                <p class="font-weight-semibold mb-0 text-dark text-sm">Page 1 of 10</p>
-                <div class="ms-auto">
-                  <button class="btn btn-sm btn-white mb-0">Previous</button>
-                  <button class="btn btn-sm btn-white mb-0">Next</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-header border-bottom pb-0">
-              <div class="d-sm-flex align-items-center mb-3">
-                <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Recent transactions</h6>
-                  <p class="text-sm mb-sm-0">These are details about the last transactions</p>
-                </div>
-                <div class="ms-auto d-flex">
-                  <div class="input-group input-group-sm ms-auto me-2">
-                    <span class="input-group-text text-body">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
-                      </svg>
-                    </span>
-                    <input type="text" class="form-control form-control-sm" placeholder="Szukaj">
-                  </div>
-                  <button type="button" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0 me-2">
-                    <span class="btn-inner--icon">
-                      <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                    </span>
-                    <span class="btn-inner--text">Download</span>
-                  </button>
+                  <input type="text" class="form-control" placeholder="Search">
                 </div>
               </div>
             </div>
@@ -694,7 +521,6 @@
                       <th class="text-secondary text-xs font-weight-semibold opacity-7">Transaction</th>
                       <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Amount</th>
                       <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Date</th>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Status</th>
                       <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Account</th>
                       <th class="text-center text-secondary text-xs font-weight-semibold opacity-7"></th>
                     </tr>
@@ -716,14 +542,6 @@
                       </td>
                       <td>
                         <span class="text-sm font-weight-normal">Wed 3:00pm</span>
-                      </td>
-                      <td>
-                        <span class="badge badge-sm border border-success text-success bg-success">
-                          <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="me-1">
-                            <path d="M1 4.42857L3.28571 6.71429L9 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-                          Paid
-                        </span>
                       </td>
                       <td class="align-middle">
                         <div class="d-flex">
@@ -761,14 +579,6 @@
                       <td>
                         <span class="text-sm font-weight-normal">Wed 1:00pm</span>
                       </td>
-                      <td>
-                        <span class="badge badge-sm border border-success text-success bg-success">
-                          <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="me-1">
-                            <path d="M1 4.42857L3.28571 6.71429L9 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-                          Paid
-                        </span>
-                      </td>
                       <td class="align-middle">
                         <div class="d-flex">
                           <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
@@ -804,14 +614,6 @@
                       </td>
                       <td>
                         <span class="text-sm font-weight-normal">Mon 7:40pm</span>
-                      </td>
-                      <td>
-                        <span class="badge badge-sm border border-warning text-warning bg-warning">
-                          <svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="me-1ca">
-                            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
-                          </svg>
-                          Pending
-                        </span>
                       </td>
                       <td class="align-middle">
                         <div class="d-flex">
@@ -849,14 +651,6 @@
                       <td>
                         <span class="text-sm font-weight-normal">Wed 5:00pm</span>
                       </td>
-                      <td>
-                        <span class="badge badge-sm border border-success text-success bg-success">
-                          <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="me-1">
-                            <path d="M1 4.42857L3.28571 6.71429L9 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-                          Paid
-                        </span>
-                      </td>
                       <td class="align-middle">
                         <div class="d-flex">
                           <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
@@ -864,94 +658,6 @@
                           </div>
                           <div class="ms-2">
                             <p class="text-dark text-sm mb-0">Visa 1234</p>
-                            <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
-                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
-                            <img src="../assets/img/small-logos/logo-webdev.svg" class="w-80" alt="webdev">
-                          </div>
-                          <div class="my-auto">
-                            <h6 class="mb-0 text-sm">Webdev</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm font-weight-normal mb-0">$14,000</p>
-                      </td>
-                      <td>
-                        <span class="text-sm font-weight-normal">Wed 3:30am</span>
-                      </td>
-                      <td>
-                        <span class="badge badge-sm border border-success text-success bg-success">
-                          <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="me-1">
-                            <path d="M1 4.42857L3.28571 6.71429L9 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-                          Paid
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="d-flex">
-                          <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
-                            <img src="../assets/img/logos/visa.png" class="w-90 mx-auto" alt="visa">
-                          </div>
-                          <div class="ms-2">
-                            <p class="text-dark text-sm mb-0">Visa 1234</p>
-                            <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
-                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
-                            <img src="../assets/img/small-logos/logo-xd.svg" class="w-80" alt="xd">
-                          </div>
-                          <div class="my-auto">
-                            <h6 class="mb-0 text-sm">Adobe XD</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm font-weight-normal mb-0">$2,300</p>
-                      </td>
-                      <td>
-                        <span class="text-sm font-weight-normal">Tue 3:30pm</span>
-                      </td>
-                      <td>
-                        <span class="badge badge-sm border border-danger text-danger bg-danger">
-                          <svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="me-1">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          Canceled
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="d-flex">
-                          <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
-                            <img src="../assets/img/logos/mastercard.png" class="w-90 mx-auto" alt="mastercard">
-                          </div>
-                          <div class="ms-2">
-                            <p class="text-dark text-sm mb-0">Mastercard 1234</p>
                             <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
                           </div>
                         </div>
@@ -967,22 +673,142 @@
                   </tbody>
                 </table>
               </div>
-              <div class="border-top py-3 px-3 d-flex align-items-center">
-                <button class="btn btn-sm btn-white d-sm-block d-none mb-0">Previous</button>
-                <nav aria-label="..." class="ms-auto">
-                  <ul class="pagination pagination-light mb-0">
-                    <li class="page-item active" aria-current="page">
-                      <span class="page-link font-weight-bold">1</span>
-                    </li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">2</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold d-sm-inline-flex d-none" href="javascript:;">3</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">...</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold d-sm-inline-flex d-none" href="javascript:;">8</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">9</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">10</a></li>
-                  </ul>
-                </nav>
-                <button class="btn btn-sm btn-white d-sm-block d-none mb-0 ms-auto">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xl-3 col-sm-6 mb-xl-0">
+          <div class="card border shadow-xs mb-4">
+            <div class="card-body text-start p-3 w-100">
+              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                <svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15z" />
+                  <path fill-rule="evenodd" d="M22.5 9.75h-21v7.5a3 3 0 003 3h15a3 3 0 003-3v-7.5zm-18 3.75a.75.75 0 01.75-.75h6a.75.75 0 010 1.5h-6a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  <div class="w-100">
+                    <p class="text-sm text-secondary mb-1">Revenue</p>
+                    <h4 class="mb-2 font-weight-bold">$99,118.5</h4>
+                    <div class="d-flex align-items-center">
+                      <span class="text-sm text-success font-weight-bolder">
+                        <i class="fa fa-chevron-up text-xs me-1"></i>10.5%
+                      </span>
+                      <span class="text-sm ms-1">from $89,740.00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0">
+          <div class="card border shadow-xs mb-4">
+            <div class="card-body text-start p-3 w-100">
+              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 013-3h3a3 3 0 013 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0112 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 017.5 5.455V5.25zm7.5 0v.09a49.488 49.488 0 00-6 0v-.09a1.5 1.5 0 011.5-1.5h3a1.5 1.5 0 011.5 1.5zm-3 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+                  <path d="M3 18.4v-2.796a4.3 4.3 0 00.713.31A26.226 26.226 0 0012 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 01-6.477-.427C4.047 21.128 3 19.852 3 18.4z" />
+                </svg>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  <div class="w-100">
+                    <p class="text-sm text-secondary mb-1">Transactions</p>
+                    <h4 class="mb-2 font-weight-bold">376</h4>
+                    <div class="d-flex align-items-center">
+                      <span class="text-sm text-success font-weight-bolder">
+                        <i class="fa fa-chevron-up text-xs me-1"></i>55%
+                      </span>
+                      <span class="text-sm ms-1">from 243</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0">
+          <div class="card border shadow-xs mb-4">
+            <div class="card-body text-start p-3 w-100">
+              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6zm4.5 7.5a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zm3.75-1.5a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0V12zm2.25-3a.75.75 0 01.75.75v6.75a.75.75 0 01-1.5 0V9.75A.75.75 0 0113.5 9zm3.75-1.5a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  <div class="w-100">
+                    <p class="text-sm text-secondary mb-1">Avg. Transaction</p>
+                    <h4 class="mb-2 font-weight-bold">$450.53</h4>
+                    <div class="d-flex align-items-center">
+                      <span class="text-sm text-success font-weight-bolder">
+                        <i class="fa fa-chevron-up text-xs me-1"></i>22%
+                      </span>
+                      <span class="text-sm ms-1">from $369.30</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+          <div class="card border shadow-xs mb-4">
+            <div class="card-body text-start p-3 w-100">
+              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  <div class="w-100">
+                    <p class="text-sm text-secondary mb-1">Coupon Sales</p>
+                    <h4 class="mb-2 font-weight-bold">$23,364.55</h4>
+                    <div class="d-flex align-items-center">
+                      <span class="text-sm text-success font-weight-bolder">
+                        <i class="fa fa-chevron-up text-xs me-1"></i>18%
+                      </span>
+                      <span class="text-sm ms-1">from $19,800.40</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card shadow-xs border">
+            <div class="card-header pb-0">
+              <div class="d-sm-flex align-items-center mb-3">
+                <div>
+                  <h6 class="font-weight-semibold text-lg mb-0">Overview balance</h6>
+                  <p class="text-sm mb-sm-0 mb-2">Here you have details about the balance.</p>
+                </div>
+                <div class="ms-auto d-flex">
+                  <button type="button" class="btn btn-sm btn-white mb-0 me-2">
+                    View report
+                  </button>
+                </div>
+              </div>
+              <div class="d-sm-flex align-items-center">
+                <h3 class="mb-0 font-weight-semibold">$87,982.80</h3>
+                <span class="badge badge-sm border border-success text-success bg-success border-radius-sm ms-sm-3 px-2">
+                  <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0.46967 4.46967C0.176777 4.76256 0.176777 5.23744 0.46967 5.53033C0.762563 5.82322 1.23744 5.82322 1.53033 5.53033L0.46967 4.46967ZM5.53033 1.53033C5.82322 1.23744 5.82322 0.762563 5.53033 0.46967C5.23744 0.176777 4.76256 0.176777 4.46967 0.46967L5.53033 1.53033ZM5.53033 0.46967C5.23744 0.176777 4.76256 0.176777 4.46967 0.46967C4.17678 0.762563 4.17678 1.23744 4.46967 1.53033L5.53033 0.46967ZM8.46967 5.53033C8.76256 5.82322 9.23744 5.82322 9.53033 5.53033C9.82322 5.23744 9.82322 4.76256 9.53033 4.46967L8.46967 5.53033ZM1.53033 5.53033L5.53033 1.53033L4.46967 0.46967L0.46967 4.46967L1.53033 5.53033ZM4.46967 1.53033L8.46967 5.53033L9.53033 4.46967L5.53033 0.46967L4.46967 1.53033Z" fill="#67C23A"></path>
+                  </svg>
+                  10.5%
+                </span>
+              </div>
+            </div>
+            <div class="card-body p-3">
+              <div class="chart mt-n6">
+                <canvas id="chart-line" class="chart-canvas" height="300"></canvas>
               </div>
             </div>
           </div>
@@ -1074,6 +900,16 @@
         <hr class="horizontal dark my-sm-4">
         <a class="btn bg-gradient-dark w-100" href="https://www.creative-tim.com/product/corporate-ui-dashboard">Free Download</a>
         <a class="btn btn-outline-dark w-100" href="https://www.creative-tim.com/learning-lab/bootstrap/license/corporate-ui-dashboard">View documentation</a>
+        <div class="w-100 text-center">
+          <a class="github-button" href="https://github.com/creativetimofficial/corporate-ui-dashboard" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star creativetimofficial/corporate-ui-dashboard on GitHub">Star</a>
+          <h6 class="mt-3">Thank you for sharing!</h6>
+          <a href="https://twitter.com/intent/tweet?text=Check%20Corporate%20UI%20Dashboard%20made%20by%20%40CreativeTim%20%23webdesign%20%23dashboard%20%23bootstrap5&amp;url=https%3A%2F%2Fwww.creative-tim.com%2Fproduct%2Fcorporate-ui-dashboard" class="btn btn-dark mb-0 me-2" target="_blank">
+            <i class="fab fa-twitter me-1" aria-hidden="true"></i> Tweet
+          </a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.creative-tim.com/product/corporate-ui-dashboard" class="btn btn-dark mb-0 me-2" target="_blank">
+            <i class="fab fa-facebook-square me-1" aria-hidden="true"></i> Share
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -1084,31 +920,7 @@
   <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/chartjs.min.js"></script>
   <script src="../assets/js/plugins/swiper-bundle.min.js" type="text/javascript"></script>
-  <script>
-    if (document.getElementsByClassName('mySwiper')) {
-      var swiper = new Swiper(".mySwiper", {
-        effect: "cards",
-        grabCursor: true,
-        initialSlide: 1,
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-      });
-    };
-
-    var win = navigator.platform.indexOf('Win') > -1;
-    if (win && document.querySelector('#sidenav-scrollbar')) {
-      var options = {
-        damping: '0.5'
-      }
-      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
-    }
-  </script>
-  <!-- Github buttons -->
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <!-- Control Center for Corporate UI Dashboard: parallax effects, scripts for the example pages etc -->
-  <script src="../assets/js/corporate-ui-dashboard.min.js?v=1.0.0"></script>
 </body>
+
 
 </html>
