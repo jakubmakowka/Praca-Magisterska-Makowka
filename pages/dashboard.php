@@ -12,6 +12,17 @@
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 -->
+
+<?php
+// We need to use sessions, so you should always start sessions using the below code.
+session_start();
+// If the user is not logged in redirect to the login page...
+if (!isset($_SESSION['loggedin'])) {
+    header('Location: sign-in.html');
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pl">
 
@@ -39,14 +50,14 @@
   <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 bg-slate-900 fixed-start " id="sidenav-main">
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
-      <a class="navbar-brand d-flex align-items-center m-0" href=" https://demos.creative-tim.com/corporate-ui-dashboard/pages/dashboard.html " target="_blank">
+      <a class="navbar-brand d-flex align-items-center m-0" href=" https://demos.creative-tim.com/corporate-ui-dashboard/pages/dashboard.php " target="_blank">
         <span class="font-weight-bold text-lg">Wspieracz</span>
       </a>
     </div>
     <div class="collapse navbar-collapse px-4  w-auto " id="sidenav-collapse-main">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link  active" href="../pages/dashboard.html">
+          <a class="nav-link  active" href="../pages/dashboard.php">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>dashboard</title>
@@ -63,7 +74,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link  " href="../pages/tables.html">
+          <a class="nav-link  " href="../pages/tables.php">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>table</title>
@@ -81,7 +92,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link  " href="../pages/wallet.html">
+          <a class="nav-link  " href="../pages/wallet.php">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>wallet</title>
@@ -105,18 +116,13 @@
           </div>
         </li>
         <li class="nav-item border-start my-0 pt-2">
-          <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/profile.html">
+          <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/admin_panel.php">
+            <span class="nav-link-text ms-1">Panel administratora</span>
+          </a>
+        </li>
+        <li class="nav-item border-start my-0 pt-2">
+          <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/profile.php">
             <span class="nav-link-text ms-1">Profil</span>
-          </a>
-        </li>
-        <li class="nav-item border-start my-0 pt-2">
-          <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/sign-in.html">
-            <span class="nav-link-text ms-1">Zaloguj się</span>
-          </a>
-        </li>
-        <li class="nav-item border-start my-0 pt-2">
-          <a class="nav-link position-relative ms-0 ps-2 py-2 " href="../pages/sign-up.html">
-            <span class="nav-link-text ms-1">Zarejestruj się</span>
           </a>
         </li>
         <li class="nav-item border-start my-0 pt-2">
@@ -256,7 +262,7 @@
               </ul>
             </li>
             <li class="nav-item ps-2 d-flex align-items-center">
-              <a href="../pages/profile.html" class="nav-link text-body p-0">
+              <a href="../pages/profile.php" class="nav-link text-body p-0">
                 <img src="../assets/img/team-2.jpg" class="avatar avatar-sm" alt="avatar" />
               </a>
             </li>
@@ -270,7 +276,7 @@
         <div class="col-md-12">
           <div class="d-md-flex align-items-center mb-3 mx-2">
             <div class="mb-md-0 mb-3">
-              <h3 class="font-weight-bold mb-0">Cześć, Noah</h3>
+              <h3 class="font-weight-bold mb-0">Cześć, <?=htmlspecialchars($_SESSION['name'], ENT_QUOTES)?></h3>
               <p class="mb-0">Witamy z powrotem!</p>
             </div>
             <button type="button" class="btn btn-sm btn-white btn-icon d-flex align-items-center mb-0 ms-md-auto mb-sm-0 mb-2 me-2" onclick="location.reload();">
@@ -691,8 +697,8 @@
     <div class="card shadow-lg ">
       <div class="card-header pb-0 pt-3 ">
         <div class="float-start">
-          <h5 class="mt-3 mb-0">Corporate UI Configurator</h5>
-          <p>See our dashboard options.</p>
+          <h5 class="mt-3 mb-0">Wspieracz - konfiguracja</h5>
+          <p>Zobacz wszystkie opcje.</p>
         </div>
         <div class="float-end mt-4">
           <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
@@ -705,7 +711,7 @@
       <div class="card-body pt-sm-3 pt-0">
         <!-- Sidebar Backgrounds -->
         <div>
-          <h6 class="mb-0">Sidebar Colors</h6>
+          <h6 class="mb-0">Kolor menu bocznego</h6>
         </div>
         <a href="javascript:void(0)" class="switch-trigger background-color">
           <div class="badge-colors my-2 text-start">
@@ -718,24 +724,24 @@
         </a>
         <!-- Sidenav Type -->
         <div class="mt-3">
-          <h6 class="mb-0">Sidenav Type</h6>
-          <p class="text-sm">Choose between 2 different sidenav types.</p>
+          <h6 class="mb-0">Typ menu</h6>
+          <p class="text-sm">Wybierz jeden z dostępnych motywów.</p>
         </div>
         <div class="d-flex">
-          <button class="btn bg-gradient-primary w-100 px-3 mb-2 active" data-class="bg-slate-900" onclick="sidebarType(this)">Dark</button>
-          <button class="btn bg-gradient-primary w-100 px-3 mb-2 ms-2" data-class="bg-white" onclick="sidebarType(this)">White</button>
+          <button class="btn bg-gradient-primary w-100 px-3 mb-2 active" data-class="bg-slate-900" onclick="sidebarType(this)">Ciemny</button>
+          <button class="btn bg-gradient-primary w-100 px-3 mb-2 ms-2" data-class="bg-white" onclick="sidebarType(this)">Jasny</button>
         </div>
-        <p class="text-sm d-xl-none d-block mt-2">You can change the sidenav type just on desktop view.</p>
+        <p class="text-sm d-xl-none d-block mt-2">Wybieraj między widokami.</p>
         <!-- Navbar Fixed -->
         <div class="mt-3">
-          <h6 class="mb-0">Navbar Fixed</h6>
+          <h6 class="mb-0">Statyczna nawigacja</h6>
         </div>
         <div class="form-check form-switch ps-0">
           <input class="form-check-input mt-1 ms-auto" type="checkbox" id="navbarFixed" onclick="navbarFixed(this)">
         </div>
         <hr class="horizontal dark my-sm-4">
-        <a class="btn bg-gradient-dark w-100" href="https://www.creative-tim.com/product/corporate-ui-dashboard">Free Download</a>
-        <a class="btn btn-outline-dark w-100" href="https://www.creative-tim.com/learning-lab/bootstrap/license/corporate-ui-dashboard">View documentation</a>
+        <a class="btn bg-gradient-dark w-100" href="https://www.creative-tim.com/product/corporate-ui-dashboard">Zobacz licencję</a>
+        <a class="btn btn-outline-dark w-100" href="https://www.creative-tim.com/learning-lab/bootstrap/license/corporate-ui-dashboard">Zobacz dokumentację</a>
       </div>
     </div>
   </div>

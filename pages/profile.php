@@ -1,42 +1,25 @@
-<?php
-session_start();
-// Change this to your connection info.
-include 'database.php';
+<!--
+=========================================================
+* Corporate UI - v1.0.0
+=========================================================
 
-// Sprawdź, czy użytkownik jest zalogowany
-if (!isset($_SESSION['loggedin']) || !isset($_SESSION['name']) || $_SESSION['name'] !== 'makowka') {
-    // Jeśli użytkownik nie jest zalogowany lub nie jest to "makowka", przekieruj go do strony logowania
+* Product Page: https://www.creative-tim.com/product/corporate-ui
+* Copyright 2022 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://www.creative-tim.com/license)
+* Coded by Creative Tim
+
+=========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+
+<?php
+// We need to use sessions, so you should always start sessions using the below code.
+session_start();
+// If the user is not logged in redirect to the login page...
+if (!isset($_SESSION['loggedin'])) {
     header('Location: sign-in.html');
     exit;
-}
-
-// Try and connect using the info above.
-$conn = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if ( mysqli_connect_errno() ) {
-    // If there is an error with the connection, stop the script and display the error.
-    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
-}
-
-// Pobierz listę nieaktywnych kont
-$result = $conn->query("SELECT * FROM accounts WHERE active = 0");
-$pending_users = [];
-while ($row = $result->fetch_assoc()) {
-    $pending_users[] = $row;
-}
-
-// Potwierdzenie rejestracji
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
-    $username = $_POST['confirm'];
-    $stmt = $conn->prepare('UPDATE accounts SET active = 1 WHERE username = ?');
-    $stmt->bind_param('s', $username);
-    $stmt->execute();
-    $stmt->close();
-    // Aktualizacja listy
-    $result = $conn->query("SELECT * FROM accounts WHERE active = 0");
-    $pending_users = [];
-    while ($row = $result->fetch_assoc()) {
-        $pending_users[] = $row;
-    }
 }
 ?>
 
@@ -67,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
   <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 bg-slate-900 fixed-start " id="sidenav-main">
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
-      <a class="navbar-brand d-flex align-items-center m-0" href=" https://demos.creative-tim.com/corporate-ui-dashboard/pages/dashboard.html " target="_blank">
+      <a class="navbar-brand d-flex align-items-center m-0" href=" https://demos.creative-tim.com/corporate-ui-dashboard/pages/dashboard.php " target="_blank">
         <span class="font-weight-bold text-lg">Wspieracz</span>
       </a>
     </div>
@@ -125,7 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
           </a>
         </li>
         <li class="nav-item mt-2">
-          <div class="d-flex align-items-center nav-link" >
+          <div class="d-flex align-items-center nav-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" class="ms-2" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
               <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
             </svg>
@@ -171,9 +154,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent mb-1 pb-0 pt-1 px-0 me-sm-6 me-5">
             <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Aplikacja</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Zarządzanie</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Raporty</li>
           </ol>
-          <h6 class="font-weight-bold mb-0">Panel administratora</h6>
+          <h6 class="font-weight-bold mb-0">Raporty</h6>
         </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -288,46 +271,187 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
       </div>
     </nav>
     <!-- End Navbar -->
-    <div class="container-fluid py-4 px-5">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="d-md-flex align-items-center mb-3 mx-2">
-            <div class="mb-md-0 mb-3">
-              <h3 class="font-weight-bold mb-0">Cześć!</h3>
-              <p class="mb-0">Witamy z powrotem!</p>
+    <div class="container">
+      <div class="card card-body py-2 bg-transparent shadow-none">
+        <div class="row">
+          <div class="col-auto pt-7">
+            <div class="avatar avatar-2xl rounded-circle position-relative mt-n7 border border-gray-100 border-4">
+              <img src="../assets/img/team-2.jpg" alt="profile_image" class="w-100">
             </div>
-            <button type="button" class="btn btn-sm btn-white btn-icon d-flex align-items-center mb-0 ms-md-auto mb-sm-0 mb-2 me-2" onclick="location.reload();">
-              <span class="btn-inner--icon">
-                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
-              </span>
-              <span class="btn-inner--text">Sync</span>
-            </button>
+          </div>
+          <div class="col-auto my-auto">
+            <div class="h-100">
+              <h3 class="mb-0 font-weight-bold">
+                <?=htmlspecialchars($_SESSION['name'], ENT_QUOTES)?>
+              </h3>
+              <p class="mb-0">
+                noah_mclaren@mail.com
+              </p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3 text-sm-end">
+            <a href="javascript:;" class="btn btn-sm btn-white">Cancel</a>
+            <a href="javascript:;" class="btn btn-sm btn-dark">Save</a>
           </div>
         </div>
       </div>
-      <hr class="my-0">
+    </div>
+    <div class="container my-3 py-3">
       <div class="row">
-                 <table class="table align-items-center justify-content-center mb-0">
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Action</th>
-                    </tr>
-                    <?php foreach ($pending_users as $user) : ?>
-                        <tr>
-                            <td><?= $user['username'] ?></td>
-                            <td><?= $user['email'] ?></td>
-                            <td>
-                                <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
-                                    <input type="hidden" name="confirm" value="<?= $user['username'] ?>">
-                                    <input type="submit" value="Confirm">
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
+        <div class="col-12 col-xl-4 mb-4">
+          <div class="card border shadow-xs h-100">
+            <div class="card-header pb-0 p-3">
+              <h6 class="mb-0 font-weight-semibold text-lg">Notifications settings</h6>
+              <p class="text-sm mb-1">Here you can set preferences.</p>
+            </div>
+            <div class="card-body p-3">
+              <h6 class="text-dark font-weight-semibold mb-1">Account</h6>
+              <ul class="list-group">
+                <li class="list-group-item border-0 px-0">
+                  <div class="form-check form-switch ps-0">
+                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault" checked>
+                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault">Email me when someone follows me</label>
+                  </div>
+                </li>
+                <li class="list-group-item border-0 px-0">
+                  <div class="form-check form-switch ps-0">
+                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault1">
+                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault1">Email me when someone answers on my post</label>
+                  </div>
+                </li>
+                <li class="list-group-item border-0 px-0">
+                  <div class="form-check form-switch ps-0">
+                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault2" checked>
+                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault2">Email me when someone mentions me</label>
+                  </div>
+                </li>
+              </ul>
+              <h6 class="text-dark font-weight-semibold mt-2 mb-1">Application</h6>
+              <ul class="list-group">
+                <li class="list-group-item border-0 px-0">
+                  <div class="form-check form-switch ps-0">
+                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault3">
+                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault3">New launches and projects</label>
+                  </div>
+                </li>
+                <li class="list-group-item border-0 px-0">
+                  <div class="form-check form-switch ps-0">
+                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault4" checked>
+                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault4">Monthly product updates</label>
+                  </div>
+                </li>
+                <li class="list-group-item border-0 px-0 pb-0">
+                  <div class="form-check form-switch ps-0">
+                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault5">
+                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault5">Subscribe to newsletter</label>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-xl-4 mb-4">
+          <div class="card border shadow-xs h-100">
+            <div class="card-header pb-0 p-3">
+              <div class="row">
+                <div class="col-md-8 col-9">
+                  <h6 class="mb-0 font-weight-semibold text-lg">Profile information</h6>
+                  <p class="text-sm mb-1">Edit the information about you.</p>
+                </div>
+                <div class="col-md-4 col-3 text-end">
+                  <button type="button" class="btn btn-white btn-icon px-2 py-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body p-3">
+              <ul class="list-group">
+                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pt-0 pb-1 text-sm"><span class="text-secondary">First Name:</span> &nbsp; Noah</li>
+                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Last Name:</span> &nbsp; Mclaren</li>
+                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Mobile:</span> &nbsp; +(44) 123 1234 123</li>
+                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Function:</span> &nbsp; Manager - Organization</li>
+                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Location:</span> &nbsp; USA</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card shadow-xs border mb-4 pb-3">
+            <div class="card-header pb-0 p-3">
+              <h6 class="mb-0 font-weight-semibold text-lg">Last articles</h6>
+              <p class="text-sm mb-1">Here you will find the latest articles.</p>
+            </div>
+            <div class="card-body p-3">
+              <div class="row">
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-8.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Sara Lamalo</p>
+                              <p class="text-xs text-secondary mb-0">20 Jul 2022</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Growth</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <a href="javascript:;">
+                    <h4 class="font-weight-semibold">
+                      Best strategy games
+                    </h4>
+                  </a>
+                  <p class="mb-4">
+                    As Uber works through a huge amount of internal management turmoil.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                    Read post
+                    <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+                  </a>
+                </div>
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-9.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Charles Deluvio</p>
+                              <p class="text-xs text-secondary mb-0">17 Jul 2022</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Education</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <a href="javascript:;">
+                    <h4 class="font-weight-semibold">
+                      Don't be afraid to be wrong
+                    </h4>
+                  </a>
+                  <p class="mb-4">
+                    As Uber works through a huge amount of internal management turmoil.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                    Read post
+                    <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <footer class="footer pt-3  ">
         <div class="container-fluid">
@@ -426,19 +550,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
   <script src="../assets/js/plugins/chartjs.min.js"></script>
   <script src="../assets/js/plugins/swiper-bundle.min.js" type="text/javascript"></script>
   <script>
-    if (document.getElementsByClassName('mySwiper')) {
-      var swiper = new Swiper(".mySwiper", {
-        effect: "cards",
-        grabCursor: true,
-        initialSlide: 1,
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-      });
-    };
-  </script>
-  <script>
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {
       var options = {
@@ -452,5 +563,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
   <!-- Control Center for Corporate UI Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../assets/js/corporate-ui-dashboard.min.js?v=1.0.0"></script>
 </body>
-
 </html>

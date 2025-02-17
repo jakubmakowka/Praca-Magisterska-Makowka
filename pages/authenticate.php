@@ -37,7 +37,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
                 $_SESSION['loggedin'] = TRUE;
                 $_SESSION['name'] = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
                 $_SESSION['id'] = $id;
-                header('Location: dashboard.html');
+                header('Location: dashboard.php');
                 exit;
             } else {
                 // Incorrect password
@@ -84,7 +84,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg blur border-radius-sm top-0 z-index-3 shadow position-absolute my-3 py-2 start-0 end-0 mx-4">
           <div class="container-fluid px-1">
-            <a class="navbar-brand font-weight-bolder ms-lg-0 " href="../pages/dashboard.html">
+            <a class="navbar-brand font-weight-bolder ms-lg-0 " href="../pages/dashboard.php">
               Poppy UI
             </a>
             <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,7 +97,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
             <div class="collapse navbar-collapse" id="navigation">
               <ul class="navbar-nav mx-auto ms-xl-auto">
                 <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 " aria-current="page" href="../pages/dashboard.html">
+                  <a class="nav-link d-flex align-items-center me-2 " aria-current="page" href="../pages/dashboard.php">
                     <svg width="14" height="14" viewBox="0 0 26 26" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="currentColor" class="opacity-6 me-1">
                       <g id="dashboard" stroke="none" stroke-width="1" fill-rule="evenodd">
                         <g id="template" transform="translate(1.000000, 1.000000)">
@@ -111,7 +111,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 " href="../pages/profile.html">
+                  <a class="nav-link d-flex align-items-center me-2 " href="../pages/profile.php">
                     <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="opacity-6 me-1">
                       <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
                     </svg>
