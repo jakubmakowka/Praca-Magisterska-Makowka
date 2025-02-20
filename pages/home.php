@@ -320,82 +320,345 @@ if (!isset($_SESSION['loggedin'])) {
       </div>
     </nav>
     <!-- End Navbar -->
-    <div class="container-fluid py-4 px-5">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="d-md-flex align-items-center mb-3 mx-2">
-            <div class="mb-md-0 mb-3">
-              <h3 class="font-weight-bold mb-0">Cześć, <?=htmlspecialchars($_SESSION['name'], ENT_QUOTES)?></h3>
-              <p class="mb-0">Witamy z powrotem!</p>
-            </div>
-            <button type="button" class="btn btn-sm btn-white btn-icon d-flex align-items-center mb-0 ms-md-auto mb-sm-0 mb-2 me-2" onclick="location.reload();">
-              <span class="btn-inner--icon">
-                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
-              </span>
-              <span class="btn-inner--text">Sync</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      <hr class="my-0">
-      <div class="row">
-        <div class="col-12">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-header border-bottom p-5">
-            <h3 class="font-weight-semibold mb-1">Kim jesteśmy?</h3>
-            <hr class="horizontal dark my-1 mb-2">
-            <p>Fundacja Makówka działa od 2015 roku, angażując się w pomoc dzieciom, młodzieży i rodzinom znajdującym się w trudnej sytuacji życiowej. Naszą misją jest poprawa jakości życia tych, którzy borykają się z problemami zdrowotnymi, społecznymi oraz materialnymi. Od początku istnienia fundacji staramy się, aby nasze działania miały realny wpływ na zmianę sytuacji beneficjentów.</p>
-              <ul class="navbar-nav justify-content-end">
-                <li class="nav-item">
-                </li>
-                <li class="nav-item">
-                  <ul>
-                    <li>Wsparcie ponad 500 rodzin w zakresie edukacji, zdrowia i pomocy materialnej.</li>
-                    <li>Zorganizowanie 30+ wydarzeń charytatywnych, które umożliwiły zebranie środków na realizację naszych projektów.</li>
-                    <li>Prowadzenie szkoleń dla ponad 200 wolontariuszy i osób zaangażowanych w działalność fundacji.</li>
-                    <li>Ponad 1000 osób skorzystało z programów terapeutycznych i edukacyjnych oferowanych przez naszą organizację.</li>
-                  </ul>
-                </li>
-              </ul>
+    <header class="bg-gradient-dark">
+    <div class="page-header min-vh-75" style="background-image: url('../assets/img/bg9.jpg');">
+      <span class="mask bg-gradient-dark opacity-6"></span>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 text-center mx-auto my-auto">
+            <h1 class="text-white">Work with an amazing design</h1>
+            <p class="lead mb-4 text-white opacity-8">We’re constantly trying to express ourselves and actualize our dreams. If you have the opportunity to play this game</p>
+            <button type="submit" class="btn bg-white text-dark">Create Account</button>
+            <h6 class="text-white mb-2 mt-5">Find us on</h6>
+            <div class="d-flex justify-content-center">
+              <a href="javascript:;"><i class="fab fa-facebook text-lg text-white me-4"></i></a>
+              <a href="javascript:;"><i class="fab fa-instagram text-lg text-white me-4"></i></a>
+              <a href="javascript:;"><i class="fab fa-twitter text-lg text-white me-4"></i></a>
+              <a href="javascript:;"><i class="fab fa-google-plus text-lg text-white"></i></a>
             </div>
           </div>
         </div>
       </div>
-      <footer class="footer pt-3  ">
-        <div class="container-fluid">
-          <div class="row align-items-center justify-content-lg-between">
-            <div class="col-lg-6 mb-lg-0 mb-4">
-              <div class="copyright text-center text-xs text-muted text-lg-start">
-                Copyright
-                © <script>
-                  document.write(new Date().getFullYear())
-                </script>
-                Corporate UI by
-                <a href="https://www.creative-tim.com" class="text-secondary" target="_blank">Creative Tim</a>.
+    </div>
+  </header>
+  <!-- -------- END HEADER 7 w/ text and video ------- -->
+  <div class="card card-body shadow-xl mx-3 mx-md-4 mt-n6">
+    <!-- Section with four info areas left & one card right with image and waves -->
+    <section class="py-7">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="row justify-content-start">
+              <div class="col-md-6">
+                <div class="info">
+                  <i class="ni ni-map-big text-3xl text-gradient text-info mb-3"></i>
+                  <h5>Fully integrated</h5>
+                  <p>We get insulted by others, lose trust for those We get back freezes</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info">
+                  <i class="ni ni-money-coins text-3xl text-gradient text-info mb-3"></i>
+                  <h5>Payments functionality</h5>
+                  <p>We get insulted by others, lose trust for those We get back freezes</p>
+                </div>
               </div>
             </div>
-            <div class="col-lg-6">
-              <ul class="nav nav-footer justify-content-center justify-content-lg-end">
-                <li class="nav-item">
-                  <a href="https://www.creative-tim.com" class="nav-link text-xs text-muted" target="_blank">Creative Tim</a>
-                </li>
-                <li class="nav-item">
-                  <a href="https://www.creative-tim.com/presentation" class="nav-link text-xs text-muted" target="_blank">About Us</a>
-                </li>
-                <li class="nav-item">
-                  <a href="https://www.creative-tim.com/blog" class="nav-link text-xs text-muted" target="_blank">Blog</a>
-                </li>
-                <li class="nav-item">
-                  <a href="https://www.creative-tim.com/license" class="nav-link text-xs pe-0 text-muted" target="_blank">License</a>
-                </li>
-              </ul>
+            <div class="row justify-content-start mt-4">
+              <div class="col-md-6">
+                <div class="info">
+                  <i class="material-symbols-rounded text-3xl text-gradient text-info mb-3">apps</i>
+                  <h5>Prebuilt components</h5>
+                  <p>We get insulted by others, lose trust for those We get back freezes</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info">
+                  <i class="material-symbols-rounded text-3xl text-gradient text-info mb-3">3p</i>
+                  <h5>Improved platform</h5>
+                  <p>We get insulted by others, lose trust for those We get back freezes</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 ms-auto mt-lg-0 mt-4">
+            <div class="card">
+              <div class="card-header p-0 position-relative mt-2 mx-2 z-index-2">
+                <a class="d-block blur-shadow-image">
+                  <img src="https://images.unsplash.com/photo-1544717302-de2939b7ef71?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="img-colored-shadow" class="img-fluid border-radius-lg">
+                </a>
+              </div>
+              <div class="card-body text-center">
+                <h5 class="font-weight-normal">
+                  <a href="javascript:;">Get insights on Search</a>
+                </h5>
+                <p class="mb-0">
+                  Website visitors today demand a frictionless user expericence — especially when using search. Because of the hight standards.
+                </p>
+                <button type="button" class="btn bg-gradient-info btn-sm mb-0 mt-3">Find out more</button>
+              </div>
             </div>
           </div>
         </div>
-      </footer>
-    </div>
+      </div>
+    </section>
+    <!-- END Section with four info areas left & one card right with image and waves -->
+    <!-- -------- START Features w/ pattern background & stats & rocket -------- -->
+    <section class="pb-5 position-relative bg-gradient-dark mx-n3">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 text-start mb-5 mt-5">
+            <h3 class="text-white z-index-1 position-relative">The Executive Team</h3>
+            <p class="text-white opacity-8 mb-0">There’s nothing I really wanted to do in life that I wasn’t able to get good at. That’s my skill.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 col-12">
+            <div class="card card-profile mt-4">
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-12 mt-n5">
+                  <a href="javascript:;">
+                    <div class="p-3 pe-md-0">
+                      <img class="w-100 border-radius-md shadow-lg" src="../assets/img/team-5.jpg" alt="image">
+                    </div>
+                  </a>
+                </div>
+                <div class="col-lg-8 col-md-6 col-12 my-auto">
+                  <div class="card-body ps-lg-0">
+                    <h5 class="mb-0">Emma Roberts</h5>
+                    <h6 class="text-info">UI Designer</h6>
+                    <p class="mb-0">Artist is a term applied to a person who engages in an activity deemed to be an art.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 col-12">
+            <div class="card card-profile mt-lg-4 mt-5">
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-12 mt-n5">
+                  <a href="javascript:;">
+                    <div class="p-3 pe-md-0">
+                      <img class="w-100 border-radius-md shadow-lg" src="../assets/img/bruce-mars.jpg" alt="image">
+                    </div>
+                  </a>
+                </div>
+                <div class="col-lg-8 col-md-6 col-12 my-auto">
+                  <div class="card-body ps-lg-0">
+                    <h5 class="mb-0">William Pearce</h5>
+                    <h6 class="text-info">Boss</h6>
+                    <p class="mb-0">Artist is a term applied to a person who engages in an activity deemed to be an art.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-4">
+          <div class="col-lg-6 col-12">
+            <div class="card card-profile mt-4 z-index-2">
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-12 mt-n5">
+                  <a href="javascript:;">
+                    <div class="p-3 pe-md-0">
+                      <img class="w-100 border-radius-md shadow-lg" src="../assets/img/ivana-squares.jpg" alt="image">
+                    </div>
+                  </a>
+                </div>
+                <div class="col-lg-8 col-md-6 col-12 my-auto">
+                  <div class="card-body ps-lg-0">
+                    <h5 class="mb-0">Ivana Flow</h5>
+                    <h6 class="text-info">Athlete</h6>
+                    <p class="mb-0">Artist is a term applied to a person who engages in an activity deemed to be an art.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 col-12">
+            <div class="card card-profile mt-lg-4 mt-5 z-index-2">
+              <div class="row">
+                <div class="col-lg-4 col-md-6 col-12 mt-n5">
+                  <a href="javascript:;">
+                    <div class="p-3 pe-md-0">
+                      <img class="w-100 border-radius-md shadow-lg" src="../assets/img/ivana-square.jpg" alt="image">
+                    </div>
+                  </a>
+                </div>
+                <div class="col-lg-8 col-md-6 col-12 my-auto">
+                  <div class="card-body ps-lg-0">
+                    <h5 class="mb-0">Marquez Garcia</h5>
+                    <h6 class="text-info">JS Developer</h6>
+                    <p class="mb-0">Artist is a term applied to a person who engages in an activity deemed to be an art.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- -------- END Features w/ pattern background & stats & rocket -------- -->
+    <section class="pt-4 pb-6" id="count-stats">
+      <div class="container">
+        <div class="row mb-7">
+          <div class="col-lg-2 col-md-4 col-6 mb-4">
+            <img class="w-100 opacity-7" src="../assets/img/logos/gray-logos/logo-coinbase.svg" alt="logo">
+          </div>
+          <div class="col-lg-2 col-md-4 col-6 mb-4">
+            <img class="w-100 opacity-7" src="../assets/img/logos/gray-logos/logo-nasa.svg" alt="logo">
+          </div>
+          <div class="col-lg-2 col-md-4 col-6 mb-4">
+            <img class="w-100 opacity-7" src="../assets/img/logos/gray-logos/logo-netflix.svg" alt="logo">
+          </div>
+          <div class="col-lg-2 col-md-4 col-6 mb-4">
+            <img class="w-100 opacity-7" src="../assets/img/logos/gray-logos/logo-pinterest.svg" alt="logo">
+          </div>
+          <div class="col-lg-2 col-md-4 col-6 mb-4">
+            <img class="w-100 opacity-7" src="../assets/img/logos/gray-logos/logo-spotify.svg" alt="logo">
+          </div>
+          <div class="col-lg-2 col-md-4 col-6 mb-4">
+            <img class="w-100 opacity-7" src="../assets/img/logos/gray-logos/logo-vodafone.svg" alt="logo">
+          </div>
+        </div>
+        <div class="row justify-content-center text-center">
+          <div class="col-md-3">
+            <h1 class="text-gradient text-info" id="state1" countTo="5234">0</h1>
+            <h5>Projects</h5>
+            <p>Of “high-performing” level are led by a certified project manager</p>
+          </div>
+          <div class="col-md-3">
+            <h1 class="text-gradient text-info"><span id="state2" countTo="3400">0</span>+</h1>
+            <h5>Hours</h5>
+            <p>That meets quality standards required by our users</p>
+          </div>
+          <div class="col-md-3">
+            <h1 class="text-gradient text-info"><span id="state3" countTo="24">0</span>/7</h1>
+            <h5>Support</h5>
+            <p>Actively engage team members that finishes on time</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- -------- START PRE-FOOTER 1 w/ SUBSCRIBE BUTTON AND IMAGE ------- -->
+    <section class="my-5 pt-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6 m-auto">
+            <h4>Be the first to see the news</h4>
+            <p class="mb-4">
+              Your company may not be in the software business,
+              but eventually, a software company will be in your business.
+            </p>
+            <div class="row">
+              <div class="col-8">
+                <div class="input-group input-group-outline">
+                  <input type="text" class="form-control mb-sm-0" placeholder="Adres email">
+                </div>
+              </div>
+              <div class="col-4 ps-0">
+                <button type="button" class="btn bg-gradient-info mb-0 h-100 position-relative z-index-2">Subskrybuj</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5 ms-auto">
+            <div class="position-relative">
+              <img class="max-width-50 w-100 position-relative z-index-2" src="../assets/img/macbook.png" alt="image">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="py-3">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-6">
+            <h3 class="mb-5">Check my latest blogposts</h3>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-3 col-sm-6">
+            <div class="card card-plain">
+              <div class="card-header p-0 position-relative">
+                <a class="d-block blur-shadow-image">
+                  <img src="../assets/img/examples/testimonial-6-2.jpg" alt="img-blur-shadow" class="img-fluid shadow border-radius-lg" loading="lazy">
+                </a>
+              </div>
+              <div class="card-body px-0">
+                <h5>
+                  <a href="javascript:;" class="text-dark font-weight-bold">Rover raised $65 million</a>
+                </h5>
+                <p>
+                  Finding temporary housing for your dog should be as easy as
+                  renting an Airbnb. That’s the idea behind Rover ...
+                </p>
+                <a href="javascript:;" class="text-info text-sm icon-move-right">Read More
+                  <i class="fas fa-arrow-right text-xs ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-sm-6">
+            <div class="card card-plain">
+              <div class="card-header p-0 position-relative">
+                <a class="d-block blur-shadow-image">
+                  <img src="../assets/img/examples/testimonial-6-3.jpg" alt="img-blur-shadow" class="img-fluid shadow border-radius-lg" loading="lazy">
+                </a>
+              </div>
+              <div class="card-body px-0">
+                <h5>
+                  <a href="javascript:;" class="text-dark font-weight-bold">MateLabs machine learning</a>
+                </h5>
+                <p>
+                  If you’ve ever wanted to train a machine learning model
+                  and integrate it with IFTTT, you now can with ...
+                </p>
+                <a href="javascript:;" class="text-info text-sm icon-move-right">Read More
+                  <i class="fas fa-arrow-right text-xs ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-sm-6">
+            <div class="card card-plain">
+              <div class="card-header p-0 position-relative">
+                <a class="d-block blur-shadow-image">
+                  <img src="../assets/img/examples/blog-9-4.jpg" alt="img-blur-shadow" class="img-fluid shadow border-radius-lg" loading="lazy">
+                </a>
+              </div>
+              <div class="card-body px-0">
+                <h5>
+                  <a href="javascript:;" class="text-dark font-weight-bold">MateLabs machine learning</a>
+                </h5>
+                <p>
+                  If you’ve ever wanted to train a machine learning model
+                  and integrate it with IFTTT, you now can with ...
+                </p>
+                <a href="javascript:;" class="text-info text-sm icon-move-right">Read More
+                  <i class="fas fa-arrow-right text-xs ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-12 col-12">
+            <div class="card card-blog card-background cursor-pointer">
+              <div class="full-background" style="background-image: url('../assets/img/examples/blog2.jpg')" loading="lazy"></div>
+              <div class="card-body">
+                <div class="content-left text-start my-auto py-4">
+                  <h2 class="card-title text-white">Flexible work hours</h2>
+                  <p class="card-description text-white">Rather than worrying about switching offices every couple years, you stay in the same place.</p>
+                  <a href="javascript:;" class="text-white text-sm icon-move-right">Read More
+                    <i class="fas fa-arrow-right text-xs ms-1"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- -------- END PRE-FOOTER 1 w/ SUBSCRIBE BUTTON AND IMAGE ------- -->
+  </div>
   </main>
   <div class="fixed-plugin">
     <a class="fixed-plugin-button text-dark position-fixed px-3 py-2">
@@ -453,271 +716,100 @@ if (!isset($_SESSION['loggedin'])) {
     </div>
   </div>
   <!--   Core JS Files   -->
-  <script src="../assets/js/core/popper.min.js"></script>
-  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/core/popper.min.js" type="text/javascript"></script>
+  <script src="../assets/js/core/bootstrap.min.js" type="text/javascript"></script>
   <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
-  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
-  <script src="../assets/js/plugins/chartjs.min.js"></script>
-  <script src="../assets/js/plugins/swiper-bundle.min.js" type="text/javascript"></script>
+  <!--  Plugin for TypedJS, full documentation here: https://github.com/inorganik/CountUp.js -->
+  <script src="../assets/js/plugins/countup.min.js"></script>
+  <!-- Control Center for Material UI Kit: parallax effects, scripts for the example pages etc -->
+  <!--  Google Maps Plugin    -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTTfWur0PDbZWPr7Pmq8K3jiDp0_xUziI"></script>
+  <script src="../assets/js/material-kit.min.js?v=3.1.0" type="text/javascript"></script>
   <script>
-    if (document.getElementsByClassName('mySwiper')) {
-      var swiper = new Swiper(".mySwiper", {
-        effect: "cards",
-        grabCursor: true,
-        initialSlide: 1,
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-      });
-    };
+    // get the element to animate
+    var element = document.getElementById('count-stats');
+    var elementHeight = element.clientHeight;
 
+    // listen for scroll event and call animate function
 
-    var ctx = document.getElementById("chart-bars").getContext("2d");
+    document.addEventListener('scroll', animate);
 
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-        datasets: [{
-            label: "Sales",
-            tension: 0.4,
-            borderWidth: 0,
-            borderSkipped: false,
-            backgroundColor: "#2ca8ff",
-            data: [450, 200, 100, 220, 500, 100, 400, 230, 500, 200],
-            maxBarThickness: 6
-          },
-          {
-            label: "Sales",
-            tension: 0.4,
-            borderWidth: 0,
-            borderSkipped: false,
-            backgroundColor: "#7c3aed",
-            data: [200, 300, 200, 420, 400, 200, 300, 430, 400, 300],
-            maxBarThickness: 6
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            backgroundColor: '#fff',
-            titleColor: '#1e293b',
-            bodyColor: '#1e293b',
-            borderColor: '#e9ecef',
-            borderWidth: 1,
-            usePointStyle: true
-          }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        scales: {
-          y: {
-            stacked: true,
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [4, 4],
-            },
-            ticks: {
-              beginAtZero: true,
-              padding: 10,
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            },
-          },
-          x: {
-            stacked: true,
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false
-            },
-            ticks: {
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            },
-          },
-        },
-      },
-    });
+    // check if element is in view
+    function inView() {
+      // get window height
+      var windowHeight = window.innerHeight;
+      // get number of pixels that the document is scrolled
+      var scrollY = window.scrollY || window.pageYOffset;
+      // get current scroll position (distance from the top of the page to the bottom of the current viewport)
+      var scrollPosition = scrollY + windowHeight;
+      // get element position (distance from the top of the page to the bottom of the element)
+      var elementPosition = element.getBoundingClientRect().top + scrollY + elementHeight;
 
-
-    var ctx2 = document.getElementById("chart-line").getContext("2d");
-
-    var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
-
-    gradientStroke1.addColorStop(1, 'rgba(45,168,255,0.2)');
-    gradientStroke1.addColorStop(0.2, 'rgba(45,168,255,0.0)');
-    gradientStroke1.addColorStop(0, 'rgba(45,168,255,0)'); //blue colors
-
-    var gradientStroke2 = ctx2.createLinearGradient(0, 230, 0, 50);
-
-    gradientStroke2.addColorStop(1, 'rgba(119,77,211,0.4)');
-    gradientStroke2.addColorStop(0.7, 'rgba(119,77,211,0.1)');
-    gradientStroke2.addColorStop(0, 'rgba(119,77,211,0)'); //purple colors
-
-    new Chart(ctx2, {
-      plugins: [{
-        beforeInit(chart) {
-          const originalFit = chart.legend.fit;
-          chart.legend.fit = function fit() {
-            originalFit.bind(chart.legend)();
-            this.height += 40;
-          }
-        },
-      }],
-      type: "line",
-      data: {
-        labels: ["Aug 18", "Aug 19", "Aug 20", "Aug 21", "Aug 22", "Aug 23", "Aug 24", "Aug 25", "Aug 26", "Aug 27", "Aug 28", "Aug 29", "Aug 30", "Aug 31", "Sept 01", "Sept 02", "Sept 03", "Aug 22", "Sept 04", "Sept 05", "Sept 06", "Sept 07", "Sept 08", "Sept 09"],
-        datasets: [{
-            label: "Volume",
-            tension: 0,
-            borderWidth: 2,
-            pointRadius: 3,
-            borderColor: "#2ca8ff",
-            pointBorderColor: '#2ca8ff',
-            pointBackgroundColor: '#2ca8ff',
-            backgroundColor: gradientStroke1,
-            fill: true,
-            data: [2828, 1291, 3360, 3223, 1630, 980, 2059, 3092, 1831, 1842, 1902, 1478, 1123, 2444, 2636, 2593, 2885, 1764, 898, 1356, 2573, 3382, 2858, 4228],
-            maxBarThickness: 6
-
-          },
-          {
-            label: "Trade",
-            tension: 0,
-            borderWidth: 2,
-            pointRadius: 3,
-            borderColor: "#832bf9",
-            pointBorderColor: '#832bf9',
-            pointBackgroundColor: '#832bf9',
-            backgroundColor: gradientStroke2,
-            fill: true,
-            data: [2797, 2182, 1069, 2098, 3309, 3881, 2059, 3239, 6215, 2185, 2115, 5430, 4648, 2444, 2161, 3018, 1153, 1068, 2192, 1152, 2129, 1396, 2067, 1215, 712, 2462, 1669, 2360, 2787, 861],
-            maxBarThickness: 6
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            align: 'end',
-            labels: {
-              boxWidth: 6,
-              boxHeight: 6,
-              padding: 20,
-              pointStyle: 'circle',
-              borderRadius: 50,
-              usePointStyle: true,
-              font: {
-                weight: 400,
-              },
-            },
-          },
-          tooltip: {
-            backgroundColor: '#fff',
-            titleColor: '#1e293b',
-            bodyColor: '#1e293b',
-            borderColor: '#e9ecef',
-            borderWidth: 1,
-            pointRadius: 2,
-            usePointStyle: true,
-            boxWidth: 8,
-          }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        scales: {
-          y: {
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [4, 4]
-            },
-            ticks: {
-              callback: function(value, index, ticks) {
-                return parseInt(value).toLocaleString() + ' EUR';
-              },
-              display: true,
-              padding: 10,
-              color: '#b2b9bf',
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            }
-          },
-          x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-              borderDash: [4, 4]
-            },
-            ticks: {
-              display: true,
-              color: '#b2b9bf',
-              padding: 20,
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            }
-          },
-        },
-      },
-    });
-  </script>
-  <script>
-    var win = navigator.platform.indexOf('Win') > -1;
-    if (win && document.querySelector('#sidenav-scrollbar')) {
-      var options = {
-        damping: '0.5'
+      // is scroll position greater than element position? (is element in view?)
+      if (scrollPosition > elementPosition) {
+        return true;
       }
-      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+
+      return false;
+    }
+
+    var animateComplete = true;
+    // animate element when it is in view
+    function animate() {
+
+      // is element in view?
+      if (inView()) {
+        if (animateComplete) {
+          if (document.getElementById('state1')) {
+            const countUp = new CountUp('state1', document.getElementById("state1").getAttribute("countTo"));
+            if (!countUp.error) {
+              countUp.start();
+            } else {
+              console.error(countUp.error);
+            }
+          }
+          if (document.getElementById('state2')) {
+            const countUp1 = new CountUp('state2', document.getElementById("state2").getAttribute("countTo"));
+            if (!countUp1.error) {
+              countUp1.start();
+            } else {
+              console.error(countUp1.error);
+            }
+          }
+          if (document.getElementById('state3')) {
+            const countUp2 = new CountUp('state3', document.getElementById("state3").getAttribute("countTo"));
+            if (!countUp2.error) {
+              countUp2.start();
+            } else {
+              console.error(countUp2.error);
+            };
+          }
+          animateComplete = false;
+        }
+      }
+    }
+
+    if (document.getElementById('typed')) {
+      var typed = new Typed("#typed", {
+        stringsElement: '#typed-strings',
+        typeSpeed: 90,
+        backSpeed: 90,
+        backDelay: 200,
+        startDelay: 500,
+        loop: true
+      });
     }
   </script>
-  <!-- Github buttons -->
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <!-- Control Center for Corporate UI Dashboard: parallax effects, scripts for the example pages etc -->
-  <script src="../assets/js/corporate-ui-dashboard.min.js?v=1.0.0"></script>
+  <script>
+    if (document.getElementsByClassName('page-header')) {
+      window.onscroll = debounce(function() {
+        var scrollPosition = window.pageYOffset;
+        var bgParallax = document.querySelector('.page-header');
+        var oVal = (window.scrollY / 3);
+        bgParallax.style.transform = 'translate3d(0,' + oVal + 'px,0)';
+      }, 6);
+    }
+  </script>
 </body>
 
 </html>
