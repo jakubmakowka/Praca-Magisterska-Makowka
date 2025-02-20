@@ -86,7 +86,7 @@ if (!isset($_SESSION['loggedin'])) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link  " href="../pages/tables.php">
+          <a class="nav-link" href="../pages/tables.php">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>table</title>
@@ -104,7 +104,7 @@ if (!isset($_SESSION['loggedin'])) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link  " href="../pages/wallet.php">
+          <a class="nav-link " href="../pages/wallet.php">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>wallet</title>
@@ -120,7 +120,7 @@ if (!isset($_SESSION['loggedin'])) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="../pages/news.php">
+          <a class="nav-link active" href="../pages/news.php">
             <div class="icon icon-shape icon-sm px-0 text-center d-flex align-items-center justify-content-center">
               <svg width="30px" height="30px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                 <title>news</title>
@@ -197,15 +197,14 @@ if (!isset($_SESSION['loggedin'])) {
     </div>
   </aside>
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-    <!-- Navbar -->
     <nav class="navbar navbar-main navbar-expand-lg mx-5 px-0 shadow-none rounded" id="navbarBlur" navbar-scroll="true">
       <div class="container-fluid py-1 px-2">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent mb-1 pb-0 pt-1 px-0 me-sm-6 me-5">
             <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Aplikacja</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Raporty</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Aktualności</li>
           </ol>
-          <h6 class="font-weight-bold mb-0">Raporty</h6>
+          <h6 class="font-weight-bold mb-0">Aktualności</h6>
         </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -319,116 +318,308 @@ if (!isset($_SESSION['loggedin'])) {
         </div>
       </div>
     </nav>
-    <!-- End Navbar -->
-    <div class="container">
-      <div class="card card-body py-2 bg-transparent shadow-none">
-        <div class="row">
-          <div class="col-auto pt-7">
-            <div class="avatar avatar-2xl rounded-circle position-relative mt-n7 border border-gray-100 border-4">
-              <img src="../assets/img/team-2.jpg" alt="profile_image" class="w-100">
+    <div class="container-fluid py-4 px-5">
+      <hr class="horizontal mb-4 dark">
+      <div class="col-12">
+          <div class="card shadow-xs border mb-4 pb-3">
+            <div class="card-header pb-0 p-3">
+              <h6 class="mb-0 font-weight-semibold text-lg">Aktualności</h6>
+              <p class="text-sm mb-1">Tutaj znajdziesz najnowsze informacje o naszej działalności.</p>
+            </div>
+            <div class="card-body p-3">
+              <div class="row">
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-9.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Dobroczynna</p>
+                              <p class="text-xs text-secondary mb-0">15 lutego 2025</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Pomoc</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <h4 class="font-weight-semibold">
+                    Wsparcie dla Domu Dziecka w Krakowie
+                  </h4>
+                  <p class="mb-4">
+                    Wspólnie z wolontariuszami przekazaliśmy artykuły szkolne i zabawki dla podopiecznych Domu Dziecka.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
+                </div>
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-8.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Dobroczynna</p>
+                              <p class="text-xs text-secondary mb-0">10 lutego 2025</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Zbiórka</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <h4 class="font-weight-semibold">
+                    Podsumowanie zbiórki "Pomoc dla Seniorów"
+                  </h4>
+                  <p class="mb-4">
+                    Dzięki Waszemu wsparciu zebraliśmy 50 000 zł na zakup leków i środków higienicznych dla seniorów w trudnej sytuacji życiowej.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
+                </div>
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-4.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Dobroczynna</p>
+                              <p class="text-xs text-secondary mb-0">5 lutego 2025</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Wydarzenie</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <h4 class="font-weight-semibold">
+                    Organizujemy Dzień Zdrowia dla dzieci
+                  </h4>
+                  <p class="mb-4">
+                    Już w marcu zapraszamy dzieci i młodzież na bezpłatne badania oraz konsultacje lekarskie z pediatrami i stomatologami.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="col-auto my-auto">
-            <div class="h-100">
-              <h3 class="mb-0 font-weight-bold">
-                <?=htmlspecialchars($_SESSION['name'], ENT_QUOTES)?>
-              </h3>
-              <p class="mb-0">
-                noah_mclaren@mail.com
-              </p>
+        </div>
+    </div>
+    <div class="container-fluid py-4 px-5">
+  <hr class="horizontal mb-4 dark">
+  <div class="col-12">
+      <div class="card shadow-xs border mb-4 pb-3">
+        <div class="card-header pb-0 p-3">
+        </div>
+        <div class="card-body p-3">
+          <div class="row">
+            <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+              <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                <div class="full-background bg-cover" style="background-image: url('../assets/img/img-5.jpg')"></div>
+                <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                <div class="card-body text-start p-3 w-100">
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                        <div class="w-50">
+                          <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Nadzieja</p>
+                          <p class="text-xs text-secondary mb-0">5 luty 2025</p>
+                        </div>
+                        <p class="text-dark text-sm font-weight-bold ms-auto">Podsumowanie</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a href="javascript:;">
+                <h4 class="font-weight-semibold">Rok 2024 w liczbach</h4>
+              </a>
+              <p class="mb-4">Podsumowujemy miniony rok – zrealizowane projekty, udzieloną pomoc oraz plany na przyszłość.</p>
+              <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
             </div>
-          </div>
-          <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3 text-sm-end">
-            <a href="javascript:;" class="btn btn-sm btn-white">Cancel</a>
-            <a href="javascript:;" class="btn btn-sm btn-dark">Save</a>
+            <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+              <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                <div class="full-background bg-cover" style="background-image: url('../assets/img/img-1.jpg')"></div>
+                <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                <div class="card-body text-start p-3 w-100">
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                        <div class="w-50">
+                          <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Nadzieja</p>
+                          <p class="text-xs text-secondary mb-0">1 luty 2025</p>
+                        </div>
+                        <p class="text-dark text-sm font-weight-bold ms-auto">Wolontariat</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a href="javascript:;">
+                <h4 class="font-weight-semibold">Nowy program wolontariatu</h4>
+              </a>
+              <p class="mb-4">Rozpoczynamy nowy program wsparcia wolontariuszy! Dołącz i pomóż potrzebującym.</p>
+              <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+              <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                <div class="full-background bg-cover" style="background-image: url('../assets/img/img-2.jpg')"></div>
+                <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                <div class="card-body text-start p-3 w-100">
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                        <div class="w-50">
+                          <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Nadzieja</p>
+                          <p class="text-xs text-secondary mb-0">12 stycznia 2024</p>
+                        </div>
+                        <p class="text-dark text-sm font-weight-bold ms-auto">Wsparcie</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a href="javascript:;">
+                <h4 class="font-weight-semibold">Nowa zbiórka dla potrzebujących</h4>
+              </a>
+              <p class="mb-4">Ruszyła zbiórka na rzecz dzieci z domów dziecka – każda złotówka się liczy!</p>
+              <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="container my-3 py-3">
-      <div class="row">
-        <div class="col-12 col-xl-4 mb-4">
-          <div class="card border shadow-xs h-100">
+</div>
+    <div class="container-fluid py-4 px-5">
+      <hr class="horizontal mb-4 dark">
+      <div class="col-12">
+          <div class="card shadow-xs border mb-4 pb-3">
             <div class="card-header pb-0 p-3">
-              <h6 class="mb-0 font-weight-semibold text-lg">Notifications settings</h6>
-              <p class="text-sm mb-1">Here you can set preferences.</p>
             </div>
             <div class="card-body p-3">
-              <h6 class="text-dark font-weight-semibold mb-1">Account</h6>
-              <ul class="list-group">
-                <li class="list-group-item border-0 px-0">
-                  <div class="form-check form-switch ps-0">
-                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault" checked>
-                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault">Email me when someone follows me</label>
-                  </div>
-                </li>
-                <li class="list-group-item border-0 px-0">
-                  <div class="form-check form-switch ps-0">
-                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault1">
-                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault1">Email me when someone answers on my post</label>
-                  </div>
-                </li>
-                <li class="list-group-item border-0 px-0">
-                  <div class="form-check form-switch ps-0">
-                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault2" checked>
-                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault2">Email me when someone mentions me</label>
-                  </div>
-                </li>
-              </ul>
-              <h6 class="text-dark font-weight-semibold mt-2 mb-1">Application</h6>
-              <ul class="list-group">
-                <li class="list-group-item border-0 px-0">
-                  <div class="form-check form-switch ps-0">
-                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault3">
-                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault3">New launches and projects</label>
-                  </div>
-                </li>
-                <li class="list-group-item border-0 px-0">
-                  <div class="form-check form-switch ps-0">
-                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault4" checked>
-                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault4">Monthly product updates</label>
-                  </div>
-                </li>
-                <li class="list-group-item border-0 px-0 pb-0">
-                  <div class="form-check form-switch ps-0">
-                    <input class="form-check-input ms-auto" type="checkbox" id="flexSwitchCheckDefault5">
-                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0" for="flexSwitchCheckDefault5">Subscribe to newsletter</label>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-xl-4 mb-4">
-          <div class="card border shadow-xs h-100">
-            <div class="card-header pb-0 p-3">
               <div class="row">
-                <div class="col-md-8 col-9">
-                  <h6 class="mb-0 font-weight-semibold text-lg">Profile information</h6>
-                  <p class="text-sm mb-1">Edit the information about you.</p>
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-2.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Pomocna Dłoń</p>
+                              <p class="text-xs text-secondary mb-0">7 stycznia 2024</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Pomoc</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <a href="javascript:;">
+                    <h4 class="font-weight-semibold">
+                      Wsparcie dla Domu Dziecka "Nadzieja"
+                    </h4>
+                  </a>
+                  <p class="mb-4">
+                    Zorganizowaliśmy zbiórkę darów dla podopiecznych Domu Dziecka "Nadzieja". Dzięki Wam udało się zebrać książki, ubrania i zabawki.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
                 </div>
-                <div class="col-md-4 col-3 text-end">
-                  <button type="button" class="btn btn-white btn-icon px-2 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
-                    </svg>
-                  </button>
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-1.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Pomocna Dłoń</p>
+                              <p class="text-xs text-secondary mb-0">5 stycznia 2024</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Zbiórka</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <a href="javascript:;">
+                    <h4 class="font-weight-semibold">
+                      Rozliczenie zbiórki świątecznej
+                    </h4>
+                  </a>
+                  <p class="mb-4">
+                    Dziękujemy wszystkim darczyńcom za udział w świątecznej zbiórce. Zebraliśmy 15 000 zł, które przeznaczymy na zakup sprzętu medycznego.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
+                </div>
+                <div class="col-xl-4 col-md-6 mb-xl-0 mb-4">
+                  <div class="card card-background border-radius-xl card-background-after-none align-items-start mb-4">
+                    <div class="full-background bg-cover" style="background-image: url('../assets/img/img-9.jpg')"></div>
+                    <span class="mask bg-dark opacity-1 border-radius-sm"></span>
+                    <div class="card-body text-start p-3 w-100">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="blur shadow d-flex align-items-center w-100 border-radius-md border border-white mt-8 p-3">
+                            <div class="w-50">
+                              <p class="text-dark text-sm font-weight-bold mb-1">Fundacja Pomocna Dłoń</p>
+                              <p class="text-xs text-secondary mb-0">1 stycznia 2024</p>
+                            </div>
+                            <p class="text-dark text-sm font-weight-bold ms-auto">Wolontariat</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <a href="javascript:;">
+                    <h4 class="font-weight-semibold">
+                      Nowi wolontariusze w naszej fundacji
+                    </h4>
+                  </a>
+                  <p class="mb-4">
+                    Do naszego zespołu dołączyło 20 nowych wolontariuszy, którzy będą pomagać w organizacji wydarzeń i wspieraniu potrzebujących.
+                  </p>
+                  <a href="javascript:;" class="text-dark font-weight-semibold icon-move-right mt-auto w-100 mb-5">
+                Czytaj więcej
+                <i class="fas fa-arrow-right-long text-sm ms-1" aria-hidden="true"></i>
+              </a>
                 </div>
               </div>
             </div>
-            <div class="card-body p-3">
-              <ul class="list-group">
-                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pt-0 pb-1 text-sm"><span class="text-secondary">First Name:</span> &nbsp; Noah</li>
-                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Last Name:</span> &nbsp; Mclaren</li>
-                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Mobile:</span> &nbsp; +(44) 123 1234 123</li>
-                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Function:</span> &nbsp; Manager - Organization</li>
-                <li class="list-group-item border-0 ps-0 text-dark font-weight-semibold pb-1 text-sm"><span class="text-secondary">Location:</span> &nbsp; USA</li>
-              </ul>
-            </div>
           </div>
         </div>
-      </div>
-      <footer class="footer pt-3  ">
+        <footer class="footer pt-3">
         <div class="container-fluid">
           <div class="row align-items-center justify-content-lg-between">
             <div class="col-lg-6 mb-lg-0 mb-4">
@@ -437,13 +628,12 @@ if (!isset($_SESSION['loggedin'])) {
                 © <script>
                   document.write(new Date().getFullYear())
                 </script>
-                Corporate UI by
-                <a href="https://www.creative-tim.com" class="text-secondary" target="_blank">Creative Tim</a>.
               </div>
             </div>
           </div>
         </div>
       </footer>
+      </div>
     </div>
   </main>
   <div class="fixed-plugin">
@@ -507,7 +697,6 @@ if (!isset($_SESSION['loggedin'])) {
   <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/chartjs.min.js"></script>
-  <script src="../assets/js/plugins/swiper-bundle.min.js" type="text/javascript"></script>
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {
@@ -517,9 +706,130 @@ if (!isset($_SESSION['loggedin'])) {
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
   </script>
+  <script>
+    var ctx = document.getElementById("chart-doughnut-info").getContext("2d");
+    var ctx2 = document.getElementById("chart-doughnut-dark").getContext("2d");
+
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["EGLD", "ETH", "SOL", "BTC"],
+        datasets: [{
+          label: "Wallet",
+          cutout: 40,
+          backgroundColor: ["#c3e1ff", "#add4fc", "#78baff", "#419eff"],
+          data: [450, 200, 100, 220],
+          maxBarThickness: 6
+        }, ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: '#fff',
+            bodyColor: '#1e293b',
+            borderColor: '#e9ecef',
+            borderWidth: 1,
+            usePointStyle: true
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        scales: {
+          y: {
+            grid: {
+              drawBorder: false,
+              display: false,
+              drawOnChartArea: false,
+              drawTicks: false,
+            },
+            ticks: {
+              display: false
+            },
+          },
+          x: {
+            grid: {
+              drawBorder: false,
+              display: false,
+              drawOnChartArea: false,
+              drawTicks: false
+            },
+            ticks: {
+              display: false
+            },
+          },
+        },
+      },
+    });
+
+    new Chart(ctx2, {
+      type: "doughnut",
+      data: {
+        labels: ["EGLD", "ETH", "SOL", "BTC"],
+        datasets: [{
+          label: "Wallet",
+          cutout: 40,
+          backgroundColor: ["#d3d8e1", "#1f293b", "#666f7f", "#3b465a"],
+          data: [350, 200, 150, 300],
+          maxBarThickness: 6
+        }, ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: '#fff',
+            bodyColor: '#1e293b',
+            borderColor: '#e9ecef',
+            borderWidth: 1,
+            usePointStyle: true
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        scales: {
+          y: {
+            grid: {
+              drawBorder: false,
+              display: false,
+              drawOnChartArea: false,
+              drawTicks: false,
+            },
+            ticks: {
+              display: false
+            },
+          },
+          x: {
+            grid: {
+              drawBorder: false,
+              display: false,
+              drawOnChartArea: false,
+              drawTicks: false
+            },
+            ticks: {
+              display: false
+            },
+          },
+        },
+      },
+    });
+  </script>
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Corporate UI Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../assets/js/corporate-ui-dashboard.min.js?v=1.0.0"></script>
 </body>
+
 </html>
