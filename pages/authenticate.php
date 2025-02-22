@@ -37,7 +37,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
                 $_SESSION['loggedin'] = TRUE;
                 $_SESSION['name'] = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
                 $_SESSION['id'] = $id;
-                header('Location: dashboard.php');
+                header('Location: home.php');
                 exit;
             } else {
                 // Incorrect password
@@ -63,7 +63,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
   <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
   <link rel="icon" type="image/png" href="../assets/img/favicon.png">
   <title>
-    Corporate UI by Creative Tim
+    Fundacja Makówka
   </title>
   <!--     Fonts and icons     -->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet" />
