@@ -79,56 +79,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wpłata na kampanię</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Formularz Płatności</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="container mt-5">
-
-    <h2>Wpłata na kampanię: <?= htmlspecialchars($campaign['name']) ?></h2>
-
-    <?php if (!empty($success_message)) : ?>
-        <div class='alert alert-success'><?= $success_message ?></div>
-    <?php endif; ?>
-
-    <?php if (!empty($error_message)) : ?>
-        <div class="alert alert-danger"><?= $error_message ?></div>
-    <?php endif; ?>
-
-    <form method="POST">
-        <input type="hidden" name="campaign_id" value="<?= $campaign_id ?>">
-
-        <div class="mb-3">
-            <label class="form-label">Nazwa kampanii</label>
-            <input type="text" class="form-control" value="<?= htmlspecialchars($campaign['name']) ?>" readonly>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Cel kampanii</label>
-            <input type="text" class="form-control" value="<?= $campaign['goal_amount'] ?> zł" readonly>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Zebrana kwota</label>
-            <input type="text" class="form-control" value="<?= $campaign['current_amount'] ?> zł" readonly>
-        </div>
-
-        <div class="mb-3">
-            <label for="amount" class="form-label">Wpłacana kwota</label>
-            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required min="1">
-        </div>
-
-        <div class="mb-3">
-            <label for="type_id" class="form-label">Typ transakcji</label>
-            <select class="form-select" id="type_id" name="type_id" required>
-                <option value="1">Sport</option>
-                <option value="2">Praca</option>
-                <option value="3">Choroby</option>
-                <option value="4">Wsparcie</option>
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Wpłać</button>
-    </form>
-
+<body>
+    <div class="container mt-5">
+        <h2>Formularz Płatności dla Fundacji Makówka</h2>
+        <form>
+            <div class="mb-3">
+                <label for="donationAmount" class="form-label">Kwota Darowizny</label>
+                <input type="number" class="form-control" id="donationAmount" placeholder="Wpisz kwotę">
+            </div>
+            <div class="mb-3">
+                <label for="paymentMethod" class="form-label">Metoda Płatności</label>
+                <select class="form-select" id="paymentMethod">
+                    <option value="bank">Polskie Banki</option>
+                    <option value="credit_card">Karta Kredytowa</option>
+                    <option value="apple_pay">Apple Pay</option>
+                </select>
+            </div>
+            <div id="bankDetails" class="d-none">
+                <div class="mb-3">
+                    <label for="bankName" class="form-label">Nazwa Banku</label>
+                    <input type="text" class="form-control" id="bankName" placeholder="Wpisz nazwę banku">
+                </div>
+                <div class="mb-3">
+                    <label for="bankAccount" class="form-label">Numer Konta</label>
+                    <input type="text" class="form-control" id="bankAccount" placeholder="Wpisz numer konta">
+                </div>
+            </div>
+            <div id="creditCardDetails" class="d-none">
+                <div class="mb-3">
+                    <label for="creditCardNumber" class="form-label">Numer Karty</label>
+                    <input type="text" class="form-control" id="creditCardNumber" placeholder="Wpisz numer karty">
+                </div>
+                <div class="mb-3">
+                    <label for="creditCardExpiration" class="form-label">Data Ważności</label>
+                    <input type="text" class="form-control" id="creditCardExpiration" placeholder="MM/RR">
+                </div>
+                <div class="mb-3">
+                    <label for="creditCardCVC" class="form-label">CVC</label>
+                    <input type="text" class="form-control" id="creditCardCVC" placeholder="Wpisz CVC">
+                </div>
+            </div>
+            <div id="applePayDetails" class="d-none">
+                <p>Użyj Apple Pay na swoim urządzeniu do dokonania płatności.</p>
+            </div>
+            <button type="submit" class="btn btn-primary">Przekaż Darowiznę</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            var bankDetails = document.getElementById('bankDetails');
+            var creditCardDetails = document.getElementById('creditCardDetails');
+            var applePayDetails = document.getElementById('applePayDetails');
+            bankDetails.classList.add('d-none');
+            creditCardDetails.classList.add('d-none');
+            applePayDetails.classList.add('d-none');
+            if (this.value === 'bank') {
+                bankDetails.classList.remove('d-none');
+            } else if (this.value === 'credit_card') {
+                creditCardDetails.classList.remove('d-none');
+            } else if (this.value === 'apple_pay') {
+                applePayDetails.classList.remove('d-none');
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

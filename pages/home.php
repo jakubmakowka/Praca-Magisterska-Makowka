@@ -56,7 +56,7 @@ if (!isset($_SESSION['loggedin'])) {
         <div class="col-lg-8 text-center mx-auto my-auto">
           <h1 class="text-white">Wspieraj naszą misję</h1>
           <p class="lead mb-4 text-white opacity-8">Razem możemy zmieniać świat na lepsze i realizować nasze marzenia. <br>Twoje wsparcie ma ogromne znaczenie.</p>
-          <a href="../pages/tables.php" class="btn btn-lg bg-white text-dark">Dołącz do nas</a>
+          <a href="../pages/tables.php" class="btn btn-lg bg-white text-dark">Przejdź do serwisu</a>
           <h6 class="text-white mb-2 mt-5">Znajdź nas na</h6>
           <div class="d-flex justify-content-center">
             <a href="javascript:;"><i class="fab fa-facebook text-white me-4 fa-3x"></i></a>

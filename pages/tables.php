@@ -63,7 +63,7 @@ $result = $conn->query($sql);
   <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 bg-slate-900 fixed-start " id="sidenav-main">
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
-      <a class="navbar-brand d-flex align-items-center m-0" href=" https://demos.creative-tim.com/corporate-ui-dashboard/pages/dashboard.php " target="_blank">
+      <a class="navbar-brand d-flex align-items-center m-0" href="../pages/home.php" target="_blank">
         <span class="font-weight-bold text-lg">Fundacja Makówka</span>
       </a>
     </div>
@@ -510,7 +510,7 @@ $result = $conn->query($sql);
                 <?php
                 if ($result->num_rows > 0) {
                   // Rozpoczęcie tabeli HTML
-                  echo '<table class="table align-items-center justify-content-center mb-0">
+                  echo '<table class="table table-hover align-items-center justify-content-center mb-0">
                             <thead class="bg-gray-100">
                               <tr>
                                 <th class="text-secondary text-xs font-weight-semibold opacity-7">Kampania</th>
@@ -961,26 +961,30 @@ $result = $conn->query($sql);
   <script src="../assets/js/plugins/chartjs.min.js"></script>
   <script src="../assets/js/plugins/swiper-bundle.min.js" type="text/javascript"></script>
   <script>
-    if (document.getElementsByClassName('mySwiper')) {
-      var swiper = new Swiper(".mySwiper", {
-        effect: "cards",
-        grabCursor: true,
-        initialSlide: 0,
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-      });
-    };
+  if (document.getElementsByClassName('mySwiper')) {
+    var swiper = new Swiper(".mySwiper", {
+      effect: "cards",
+      grabCursor: true,
+      initialSlide: 0,
+      autoplay: {
+        delay: 1000,
+        disableOnInteraction: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+    });
+  }
 
-    var win = navigator.platform.indexOf('Win') > -1;
-    if (win && document.querySelector('#sidenav-scrollbar')) {
-      var options = {
-        damping: '0.5'
-      }
-      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+  var win = navigator.platform.indexOf('Win') > -1;
+  if (win && document.querySelector('#sidenav-scrollbar')) {
+    var options = {
+      damping: '0.5'
     }
-  </script>
+    Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+  }
+</script>
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Corporate UI Dashboard: parallax effects, scripts for the example pages etc -->
