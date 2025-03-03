@@ -79,72 +79,230 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formularz Płatności</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Wpłata na kampanię</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container mt-5">
-        <h2>Formularz Płatności dla Fundacji Makówka</h2>
-        <form>
-            <div class="mb-3">
-                <label for="donationAmount" class="form-label">Kwota Darowizny</label>
-                <input type="number" class="form-control" id="donationAmount" placeholder="Wpisz kwotę">
-            </div>
-            <div class="mb-3">
-                <label for="paymentMethod" class="form-label">Metoda Płatności</label>
-                <select class="form-select" id="paymentMethod">
-                    <option value="bank">Polskie Banki</option>
-                    <option value="credit_card">Karta Kredytowa</option>
-                    <option value="apple_pay">Apple Pay</option>
-                </select>
-            </div>
-            <div id="bankDetails" class="d-none">
-                <div class="mb-3">
-                    <label for="bankName" class="form-label">Nazwa Banku</label>
-                    <input type="text" class="form-control" id="bankName" placeholder="Wpisz nazwę banku">
+<body class="container mt-5">
+
+    <h2>Wpłata na kampanię: <?= htmlspecialchars($campaign['name']) ?></h2>
+
+    <?php if (!empty($success_message)) : ?>
+        <div class='alert alert-success'><?= $success_message ?></div>
+    <?php endif; ?>
+
+    <?php if (!empty($error_message)) : ?>
+        <div class="alert alert-danger"><?= $error_message ?></div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <input type="hidden" name="campaign_id" value="<?= $campaign_id ?>">
+
+        <div class="mb-3">
+            <label class="form-label">Nazwa kampanii</label>
+            <input type="text" class="form-control" value="<?= htmlspecialchars($campaign['name']) ?>" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Cel kampanii</label>
+            <input type="text" class="form-control" value="<?= $campaign['goal_amount'] ?> zł" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Zebrana kwota</label>
+            <input type="text" class="form-control" value="<?= $campaign['current_amount'] ?> zł" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label for="amount" class="form-label">Wpłacana kwota</label>
+            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required min="1">
+        </div>
+
+        <div class="mb-3">
+            <label for="type_id" class="form-label">Typ transakcji</label>
+            <select class="form-select" id="type_id" name="type_id" required>
+                <option value="1">Sport</option>
+                <option value="2">Praca</option>
+                <option value="3">Choroby</option>
+                <option value="4">Wsparcie</option>
+            </select>
+        </div>
+        <div id="bankDetails" class="">
+                <label class="form-label">Wybierz Kartę</label>
+                <div class="d-flex flex-wrap gap-2">
+
+                    <!-- Karty -->
+
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank1">
+                        <img src="../assets/img/options/channel_71.png" alt="Masterpass" width="100">Masterpass
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank2">
+                        <img src="../assets/img/options/channel_246.png" alt="Visa/Mastercard" width="100">Visa/Mastercard
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank3">
+                        <img src="../assets/img/options/channel_249.png" alt="Visa SRD" width="100">Visa SRC
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank4">
+                        <img src="../assets/img/options/channel_260.png" alt="Google Pay" width="100">Google Pay
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank5">
+                        <img src="../assets/img/options/channel_262.png" alt="Apple Pay" width="100">Apple Pay
+                    </label>
+
+                    <!-- Banki -->
+
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank6">
+                        <img src="../assets/img/options/channel_1.png" alt="mTransfer" width="100">mTransfer
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank7">
+                        <img src="../assets/img/options/channel_2.png" alt="Płacę z Inteligo" width="100">Płacę z Inteligo
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank8">
+                        <img src="../assets/img/options/channel_4.png" alt="Płacę z iPKO" width="100">Płacę z iPKO
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank9">
+                        <img src="../assets/img/options/channel_6.png" alt="Przelew24" width="100">Przelew24
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank10">
+                        <img src="../assets/img/options/channel_36.png" alt="Pekao24Przelew" width="100">Pekao24Przelew
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank11">
+                        <img src="../assets/img/options/channel_38.png" alt="Płać z ING" width="100">Płać z ING
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank12">
+                        <img src="../assets/img/options/channel_44.png" alt="Millennium - Płatności Internetowe" width="100">Millennium - Płatności Internetowe
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank13">
+                        <img src="../assets/img/options/channel_45.png" alt="Płacę z Alior Bankiem" width="100">Płacę z Alior Bankiem
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank14">
+                        <img src="../assets/img/options/channel_46.png" alt="Płacę z Citi Handlowy" width="100">Płacę z Citi Handlowy
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank15">
+                        <img src="../assets/img/options/channel_50.png" alt="Pay Way Toyota Bank" width="100">Pay Way Toyota Bank
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank16">
+                        <img src="../assets/img/options/channel_51.png" alt="Płać z BOŚ" width="100">Płać z BOŚ
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank17">
+                        <img src="../assets/img/options/channel_66.png" alt="Bank Nowy BFG S.A." width="100">Bank Nowy BFG S.A.
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank18">
+                        <img src="../assets/img/options/channel_70.png" alt="Pocztowy24" width="100">Pocztowy24
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank19">
+                        <img src="../assets/img/options/channel_73.png" alt="BLIK" width="100">BLIK
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank20">
+                        <img src="../assets/img/options/channel_74.png" alt="Banki Spółdzielcze" width="100">Banki Spółdzielcze
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank21">
+                        <img src="../assets/img/options/channel_75.png" alt="Płacę z Plus Bank" width="100">Płacę z Plus Bank
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank22">
+                        <img src="../assets/img/options/channel_76.png" alt="Getin Bank PBL" width="100">Getin Bank PBL
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank23">
+                        <img src="../assets/img/options/channel_80.png" alt="Noble Pay" width="100">Noble Pay
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank24">
+                        <img src="../assets/img/options/channel_81.png" alt="Idea Cloud" width="100">Idea Cloud
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank25">
+                        <img src="../assets/img/options/channel_83.png" alt="EnveloBank" width="100">EnveloBank
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank26">
+                        <img src="../assets/img/options/channel_86.png" alt="TrustPay" width="100">TrustPay
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank27">
+                        <img src="../assets/img/options/channel_87.png" alt="Credit Agricole PBL" width="100">Credit Agricole PBL
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank28">
+                        <img src="../assets/img/options/channel_90.png" alt="BNP Paribas – płacę z Pl@net" width="100">BNP Paribas – płacę z Pl@net
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank29">
+                        <img src="../assets/img/options/channel_91.png" alt="Nest Bank" width="100">Nest Bank
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank30">
+                        <img src="../assets/img/options/channel_92.png" alt="Bank Spółdzielczy w Brodnicy" width="100">Bank Spółdzielczy w Brodnicy
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank31">
+                        <img src="../assets/img/options/channel_93.png" alt="Kasa Stefczyka" width="100">Kasa Stefczyka
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank32">
+                        <img src="../assets/img/options/channel_52.png" alt="SkyCash" width="100">SkyCash
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank33">
+                        <img src="../assets/img/options/channel_59.png" alt="CinkciarzPAY" width="100">CinkciarzPAY
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank34">
+                        <img src="../assets/img/options/channel_218.png" alt="paysafecard" width="100">paysafecard
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank35">
+                        <img src="../assets/img/options/channel_212.png" alt="PayPal" width="100">PayPal
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank36">
+                        <img src="../assets/img/options/channel_94.png" alt="Kupuj teraz zapłać później" width="100">Kupuj teraz zapłać później
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank37">
+                        <img src="../assets/img/options/channel_95.png" alt="PayPo" width="100">PayPo
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank38">
+                        <img src="../assets/img/options/channel_231.png" alt="Orange" width="100">Orange
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank39">
+                        <img src="../assets/img/options/channel_232.png" alt="T-Mobile" width="100">T-Mobile
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank40">
+                        <img src="../assets/img/options/channel_233.png" alt="PLAY" width="100">PLAY
+                    </label>
+                    <label class="bank-option border border-primary rounded p-2">
+                        <input type="radio" name="bank" value="bank41">
+                        <img src="../assets/img/options/channel_234.png" alt="Plus" width="100">Plus
+                    </label>
                 </div>
-                <div class="mb-3">
-                    <label for="bankAccount" class="form-label">Numer Konta</label>
-                    <input type="text" class="form-control" id="bankAccount" placeholder="Wpisz numer konta">
-                </div>
             </div>
-            <div id="creditCardDetails" class="d-none">
-                <div class="mb-3">
-                    <label for="creditCardNumber" class="form-label">Numer Karty</label>
-                    <input type="text" class="form-control" id="creditCardNumber" placeholder="Wpisz numer karty">
-                </div>
-                <div class="mb-3">
-                    <label for="creditCardExpiration" class="form-label">Data Ważności</label>
-                    <input type="text" class="form-control" id="creditCardExpiration" placeholder="MM/RR">
-                </div>
-                <div class="mb-3">
-                    <label for="creditCardCVC" class="form-label">CVC</label>
-                    <input type="text" class="form-control" id="creditCardCVC" placeholder="Wpisz CVC">
-                </div>
-            </div>
-            <div id="applePayDetails" class="d-none">
-                <p>Użyj Apple Pay na swoim urządzeniu do dokonania płatności.</p>
-            </div>
-            <button type="submit" class="btn btn-primary">Przekaż Darowiznę</button>
-        </form>
-    </div>
-    <script>
-        document.getElementById('paymentMethod').addEventListener('change', function() {
-            var bankDetails = document.getElementById('bankDetails');
-            var creditCardDetails = document.getElementById('creditCardDetails');
-            var applePayDetails = document.getElementById('applePayDetails');
-            bankDetails.classList.add('d-none');
-            creditCardDetails.classList.add('d-none');
-            applePayDetails.classList.add('d-none');
-            if (this.value === 'bank') {
-                bankDetails.classList.remove('d-none');
-            } else if (this.value === 'credit_card') {
-                creditCardDetails.classList.remove('d-none');
-            } else if (this.value === 'apple_pay') {
-                applePayDetails.classList.remove('d-none');
-            }
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <button type="submit" class="btn btn-primary">Wpłać</button>
+    </form>
+
 </body>
 </html>
