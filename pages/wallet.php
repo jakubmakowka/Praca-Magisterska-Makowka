@@ -14,14 +14,17 @@
 -->
 
 <?php
-// We need to use sessions, so you should always start sessions using the below code.
-session_start();
+// Sprawdzenie, czy sesja już została uruchomiona
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 include 'database.php';
 
-// If the user is not logged in redirect to the login page...
+// Jeśli użytkownik nie jest zalogowany, przekieruj do strony logowania
 if (!isset($_SESSION['loggedin'])) {
     header('Location: sign-in.html');
-    exit;
+    die();
 }
 
 $user_id = $_SESSION['id'];
@@ -34,72 +37,71 @@ if ($conn->connect_error) {
     die("Błąd połączenia: " . $conn->connect_error);
 }
 
-$sql_total = "SELECT SUM(amount) AS total_amount FROM transactions WHERE account_id = ?";
-$stmt_total = $conn->prepare($sql_total);
-$stmt_total->bind_param("i", $user_id);
-$stmt_total->execute();
-$result_total = $stmt_total->get_result();
-$total_amount = $result_total->fetch_assoc()['total_amount'] ?? 0;
+// Pobranie sumy wpłat: całkowitej, dziennej, tygodniowej, miesięcznej i rocznej w jednym zapytaniu
+$sql_summary = "SELECT 
+    SUM(amount) AS total_amount,
+    SUM(CASE WHEN DATE(timestamp) = CURDATE() THEN amount ELSE 0 END) AS day_amount,
+    SUM(CASE WHEN timestamp >= CURDATE() - INTERVAL 1 WEEK THEN amount ELSE 0 END) AS week_amount,
+    SUM(CASE WHEN timestamp >= CURDATE() - INTERVAL 1 MONTH THEN amount ELSE 0 END) AS month_amount,
+    SUM(CASE WHEN timestamp >= CURDATE() - INTERVAL 1 YEAR THEN amount ELSE 0 END) AS year_amount
+FROM transactions WHERE account_id = ?";
 
+$stmt_summary = $conn->prepare($sql_summary);
+if (!$stmt_summary) {
+    die("Błąd zapytania SQL: " . $conn->error);
+}
+$stmt_summary->bind_param("i", $user_id);
+$stmt_summary->execute();
+$result_summary = $stmt_summary->get_result();
+$summary = $result_summary->fetch_assoc();
 
-$results_per_page = 10; // Ilość transakcji na stronę
+$total_amount = $summary['total_amount'] ?? 0;
+$day_amount = $summary['day_amount'] ?? 0;
+$week_amount = $summary['week_amount'] ?? 0;
+$month_amount = $summary['month_amount'] ?? 0;
+$year_amount = $summary['year_amount'] ?? 0;
+
+$stmt_summary->close();
+
+// Ustawienia paginacji
+$results_per_page = 10;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $results_per_page;
 
 // Pobranie historii transakcji z paginacją
-$sql = "SELECT transactions.timestamp, transactions.amount, campaigns.name AS campaign_name 
-        FROM transactions 
-        JOIN campaigns ON transactions.campaign_id = campaigns.id 
-        WHERE transactions.account_id = ? 
-        ORDER BY transactions.timestamp DESC 
-        LIMIT ? OFFSET ?";
+$sql_transactions = "SELECT transactions.timestamp, transactions.amount, campaigns.name AS campaign_name 
+                     FROM transactions 
+                     JOIN campaigns ON transactions.campaign_id = campaigns.id 
+                     WHERE transactions.account_id = ? 
+                     ORDER BY transactions.timestamp DESC 
+                     LIMIT ? OFFSET ?";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("iii", $user_id, $results_per_page, $offset);
-$stmt->execute();
-$result = $stmt->get_result();
+$stmt_transactions = $conn->prepare($sql_transactions);
+if (!$stmt_transactions) {
+    die("Błąd zapytania SQL: " . $conn->error);
+}
+$stmt_transactions->bind_param("iii", $user_id, $results_per_page, $offset);
+$stmt_transactions->execute();
+$result_transactions = $stmt_transactions->get_result();
 
-// Pobranie całkowitej liczby transakcji
+// Pobranie liczby wszystkich transakcji użytkownika
 $sql_count = "SELECT COUNT(*) AS total FROM transactions WHERE account_id = ?";
 $stmt_count = $conn->prepare($sql_count);
+if (!$stmt_count) {
+    die("Błąd zapytania SQL: " . $conn->error);
+}
 $stmt_count->bind_param("i", $user_id);
 $stmt_count->execute();
-$total_transactions = $stmt_count->get_result()->fetch_assoc()['total'];
+$result_count = $stmt_count->get_result();
+$total_transactions = $result_count->fetch_assoc()['total'] ?? 0;
 $total_pages = ceil($total_transactions / $results_per_page);
 
-// Get the sum of donations for the last day
-$sql_day = "SELECT SUM(amount) AS day_amount FROM transactions WHERE account_id = ? AND DATE(timestamp) = CURDATE()";
-$stmt_day = $conn->prepare($sql_day);
-$stmt_day->bind_param("i", $user_id);
-$stmt_day->execute();
-$result_day = $stmt_day->get_result();
-$day_amount = $result_day->fetch_assoc()['day_amount'] ?? 0;
-
-// Get the sum of donations for the last week
-$sql_week = "SELECT SUM(amount) AS week_amount FROM transactions WHERE account_id = ? AND timestamp >= CURDATE() - INTERVAL 1 WEEK";
-$stmt_week = $conn->prepare($sql_week);
-$stmt_week->bind_param("i", $user_id);
-$stmt_week->execute();
-$result_week = $stmt_week->get_result();
-$week_amount = $result_week->fetch_assoc()['week_amount'] ?? 0;
-
-// Get the sum of donations for the last month
-$sql_month = "SELECT SUM(amount) AS month_amount FROM transactions WHERE account_id = ? AND timestamp >= CURDATE() - INTERVAL 1 MONTH";
-$stmt_month = $conn->prepare($sql_month);
-$stmt_month->bind_param("i", $user_id);
-$stmt_month->execute();
-$result_month = $stmt_month->get_result();
-$month_amount = $result_month->fetch_assoc()['month_amount'] ?? 0;
-
-// Get the sum of donations for the last year
-$sql_year = "SELECT SUM(amount) AS year_amount FROM transactions WHERE account_id = ? AND timestamp >= CURDATE() - INTERVAL 1 YEAR";
-$stmt_year = $conn->prepare($sql_year);
-$stmt_year->bind_param("i", $user_id);
-$stmt_year->execute();
-$result_year = $stmt_year->get_result();
-$year_amount = $result_year->fetch_assoc()['year_amount'] ?? 0;
-
+// Zamknięcie zapytań i połączenia z bazą
+$stmt_transactions->close();
+$stmt_count->close();
+$conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pl">
@@ -492,7 +494,7 @@ $year_amount = $result_year->fetch_assoc()['year_amount'] ?? 0;
                 </tr>
               </thead>
               <tbody>
-                <?php while ($row = $result->fetch_assoc()): ?>
+                <?php while ($row = $result_transactions->fetch_assoc()): ?>
                   <tr>
                     <td class="d-flex align-items-center py-3 px-4 text-sm">
                       <div class="form-check mb-0">
@@ -1040,8 +1042,3 @@ $year_amount = $result_year->fetch_assoc()['year_amount'] ?? 0;
 </body>
 
 </html>
-
-<?php
-$stmt->close();
-$conn->close();
-?>

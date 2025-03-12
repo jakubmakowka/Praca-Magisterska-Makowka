@@ -1,43 +1,48 @@
 <?php
 session_start();
-// Change this to your connection info.
 include 'database.php';
 
-// Sprawdź, czy użytkownik jest zalogowany
-if (!isset($_SESSION['loggedin']) || !isset($_SESSION['name']) || $_SESSION['name'] !== 'makowka') {
-    // Jeśli użytkownik nie jest zalogowany lub nie jest to "makowka", przekieruj go do strony logowania
+// Sprawdzenie, czy użytkownik jest zalogowany i czy ma uprawnienia administratora
+if (!isset($_SESSION['loggedin'], $_SESSION['name']) || $_SESSION['name'] !== 'makowka') {
     header('Location: sign-in.html');
     exit;
 }
 
-// Try and connect using the info above.
-$conn = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if ( mysqli_connect_errno() ) {
-    // If there is an error with the connection, stop the script and display the error.
-    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+// Połączenie z bazą danych
+$conn = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+if ($conn->connect_error) {
+    exit('Błąd połączenia z bazą danych: ' . $conn->connect_error);
 }
 
-// Pobierz listę nieaktywnych kont
-$result = $conn->query("SELECT * FROM accounts WHERE active = 0");
+// Pobranie listy nieaktywnych kont
 $pending_users = [];
-while ($row = $result->fetch_assoc()) {
-    $pending_users[] = $row;
+if ($result = $conn->query("SELECT * FROM accounts WHERE active = 0")) {
+    $pending_users = $result->fetch_all(MYSQLI_ASSOC);
+    $result->free();
 }
 
 // Potwierdzenie rejestracji
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST['confirm'])) {
     $username = $_POST['confirm'];
+
     $stmt = $conn->prepare('UPDATE accounts SET active = 1 WHERE username = ?');
-    $stmt->bind_param('s', $username);
-    $stmt->execute();
-    $stmt->close();
-    // Aktualizacja listy
-    $result = $conn->query("SELECT * FROM accounts WHERE active = 0");
-    $pending_users = [];
-    while ($row = $result->fetch_assoc()) {
-        $pending_users[] = $row;
+    if ($stmt) {
+        $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $stmt->close();
+
+        // Odświeżenie listy nieaktywnych użytkowników
+        if ($result = $conn->query("SELECT * FROM accounts WHERE active = 0")) {
+            $pending_users = $result->fetch_all(MYSQLI_ASSOC);
+            $result->free();
+        }
+    } else {
+        exit('Błąd przygotowania zapytania SQL: ' . $conn->error);
     }
 }
+
+// Zamknięcie połączenia
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -342,8 +347,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
         <div class="col-md-12">
           <div class="d-md-flex align-items-center mb-3 mx-2">
             <div class="mb-md-0 mb-3">
-              <h3 class="font-weight-bold mb-0">Cześć!</h3>
-              <p class="mb-0">Witamy z powrotem!</p>
+              <h3 class="font-weight-bold mb-0 pt-5 pb-3">Lista kont oczekujących na zatwierdzenie:</h3>
             </div>
             <button type="button" class="btn btn-sm btn-white btn-icon d-flex align-items-center mb-0 ms-md-auto mb-sm-0 mb-2 me-2" onclick="location.reload();">
               <span class="btn-inner--icon">
@@ -360,9 +364,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
       <div class="row">
                  <table class="table align-items-center justify-content-center mb-0">
                     <tr>
-                        <th>Username</th>
+                        <th>Nazwa</th>
                         <th>Email</th>
-                        <th>Action</th>
+                        <th>Akcja</th>
                     </tr>
                     <?php foreach ($pending_users as $user) : ?>
                         <tr>
@@ -371,7 +375,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
                             <td>
                                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
                                     <input type="hidden" name="confirm" value="<?= $user['username'] ?>">
-                                    <input type="submit" value="Confirm">
+                                    <input type="submit" value="Potwierdź" class="btn btn-sm btn-success btn-icon align-items-center mb-0 me-2">
                                 </form>
                             </td>
                         </tr>

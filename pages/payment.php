@@ -7,18 +7,20 @@ if (!isset($_SESSION['id'])) {
 }
 
 $account_id = $_SESSION['id']; 
-$status_id = 1; 
+$status_id = 1;
 
 $con = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
 if ($con->connect_error) {
     die("Błąd połączenia: " . $con->connect_error);
 }
 
-$campaign_id = isset($_GET['campaign_id']) ? (int)$_GET['campaign_id'] : 0;
+// Pobranie ID kampanii w bezpieczny sposób
+$campaign_id = filter_input(INPUT_GET, 'campaign_id', FILTER_SANITIZE_NUMBER_INT);
 $error_message = "";
 $success_message = "";
 $campaign = null;
 
+// Pobranie danych kampanii
 if ($campaign_id > 0) {
     $stmt = $con->prepare("SELECT name, goal_amount, current_amount FROM campaigns WHERE id = ?");
     $stmt->bind_param("i", $campaign_id);
@@ -32,40 +34,37 @@ if (!$campaign) {
     die("Nie znaleziono kampanii.");
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $amount = $_POST['amount'];
-    $type_id = $_POST['type_id'];
+// Obsługa formularza
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_FLOAT);
+    $type_id = filter_input(INPUT_POST, 'type_id', FILTER_SANITIZE_NUMBER_INT);
     $timestamp = date("Y-m-d H:i:s");
 
-    if ($amount <= 0) {
+    if ($amount === false || $amount <= 0) {
         $error_message = "Kwota musi być większa od 0.";
     } else {
         mysqli_begin_transaction($con);
-
         try {
+            // Wstawienie transakcji
             $stmt = $con->prepare("INSERT INTO Transactions (timestamp, amount, type_id, account_id, campaign_id, status_id) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("sdiiii", $timestamp, $amount, $type_id, $account_id, $campaign_id, $status_id);
-
             if (!$stmt->execute()) {
                 throw new Exception("Błąd podczas dodawania transakcji: " . $stmt->error);
             }
+            $transaction_id = $stmt->insert_id;
             $stmt->close();
 
-            $stmt = $con->prepare("UPDATE Campaigns SET current_amount = current_amount + ? WHERE id = ?");
+            // Aktualizacja kampanii
+            $stmt = $con->prepare("UPDATE campaigns SET current_amount = current_amount + ? WHERE id = ?");
             $stmt->bind_param("di", $amount, $campaign_id);
-
             if (!$stmt->execute()) {
                 throw new Exception("Błąd podczas aktualizacji current_amount: " . $stmt->error);
             }
             $stmt->close();
 
             mysqli_commit($con);
-            $success_message = "Transakcja dodana pomyślnie, kwota zaktualizowana!";
-            echo "<script>
-                setTimeout(function() {
-                    window.location.href = 'tables.php';
-                }, 2000);
-            </script>";
+            $success_message = "Transakcja #$transaction_id dodana pomyślnie, kwota zaktualizowana!";
+            header("Refresh: 2; URL=tables.php");
         } catch (Exception $e) {
             mysqli_rollback($con);
             $error_message = $e->getMessage();
@@ -83,15 +82,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
-
     <h2>Wpłata na kampanię: <?= htmlspecialchars($campaign['name']) ?></h2>
 
     <?php if (!empty($success_message)) : ?>
-        <div class='alert alert-success'><?= $success_message ?></div>
+        <div class='alert alert-success'><?= htmlspecialchars($success_message) ?></div>
     <?php endif; ?>
 
     <?php if (!empty($error_message)) : ?>
-        <div class="alert alert-danger"><?= $error_message ?></div>
+        <div class="alert alert-danger"><?= htmlspecialchars($error_message) ?></div>
     <?php endif; ?>
 
     <form method="POST">

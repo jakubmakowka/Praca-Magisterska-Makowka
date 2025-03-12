@@ -1,60 +1,59 @@
 <?php
 session_start();
-// Change this to your connection info.
 include 'database.php';
-// Try and connect using the info above.
-$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if (mysqli_connect_errno()) {
-    // If there is an error with the connection, stop the script and display the error.
-    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+
+// Połączenie z bazą danych
+$con = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+if ($con->connect_error) {
+    exit('Błąd połączenia z bazą danych: ' . $con->connect_error);
 }
 
-// Now we check if the data from the login form was submitted, isset() will check if the data exists.
-if (!isset($_POST['username'], $_POST['password'])) {
-    // Could not get the data that should have been sent.
-    exit('Please fill both the username and password fields!');
+// Sprawdzenie, czy dane logowania zostały przesłane
+if (empty($_POST['username']) || empty($_POST['password'])) {
+    exit('Proszę wypełnić oba pola: nazwa użytkownika i hasło.');
 }
 
-// Prepare our SQL, preparing the SQL statement will prevent SQL injection.
-if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE username = ?')) {
-    // Bind parameters (s = string, i = int, b = blob, etc), in our case the username is a string so we use "s"
-    $stmt->bind_param('s', $_POST['username']);
-    $stmt->execute();
-    // Store the result so we can check if the account exists in the database.
-    $stmt->store_result();
+// Przygotowanie zapytania SQL w celu zapobiegania SQL Injection
+$stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE username = ?');
+if (!$stmt) {
+    exit('Błąd zapytania SQL: ' . $con->error);
+}
 
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $password, $active);
-        $stmt->fetch();
+$stmt->bind_param('s', $_POST['username']);
+$stmt->execute();
+$stmt->store_result();
 
-        // Check if the account is active
-        if ($active == 1) {
-            // Account exists and is active, now we verify the password.
-            if (password_verify($_POST['password'], $password)) {
-                // Verification success! User has logged-in!
-                // Create sessions, so we know the user is logged in, they basically act like cookies but remember the data on the server.
-                session_regenerate_id(true);
-                $_SESSION['loggedin'] = TRUE;
-                $_SESSION['name'] = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
-                $_SESSION['id'] = $id;
-                header('Location: home.php');
-                exit;
-            } else {
-                // Incorrect password
-                $result = 'Incorrect username and/or password!';
-            }
+if ($stmt->num_rows > 0) {
+    $stmt->bind_result($id, $password_hash, $active);
+    $stmt->fetch();
+
+    // Sprawdzenie, czy konto jest aktywne
+    if ($active == 1) {
+        // Weryfikacja hasła
+        if (password_verify($_POST['password'], $password_hash)) {
+            // Zalogowano pomyślnie
+            session_regenerate_id(true);
+            $_SESSION['loggedin'] = true;
+            $_SESSION['name'] = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
+            $_SESSION['id'] = $id;
+            header('Location: home.php');
+            exit;
         } else {
-            // Account is not active, waiting for administrator approval
-            $result = 'Your account is inactive. Please wait for administrator approval.';
+            $result = 'Nieprawidłowa nazwa użytkownika lub hasło!';
         }
     } else {
-        // Incorrect username
-        $result = 'Incorrect username and/or password!';
+        $result = 'Twoje konto jest nieaktywne. Poczekaj na potwierdzenie od administratora.';
     }
-    $stmt->close();
+} else {
+    $result = 'Nieprawidłowa nazwa użytkownika lub hasło!';
 }
+
+// Zamknięcie zapytania i połączenia
+$stmt->close();
+$con->close();
 ?>
 
+<!DOCTYPE html>
 <html lang="pl">
 
 <head>
@@ -85,7 +84,7 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
         <nav class="navbar navbar-expand-lg blur border-radius-sm top-0 z-index-3 shadow position-absolute my-3 py-2 start-0 end-0 mx-4">
           <div class="container-fluid px-1">
             <a class="navbar-brand font-weight-bolder ms-lg-0 " href="../pages/dashboard.php">
-              Poppy UI
+              Fundacja Makówka
             </a>
             <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon mt-2">
@@ -97,41 +96,19 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
             <div class="collapse navbar-collapse" id="navigation">
               <ul class="navbar-nav mx-auto ms-xl-auto">
                 <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 " aria-current="page" href="../pages/dashboard.php">
-                    <svg width="14" height="14" viewBox="0 0 26 26" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="currentColor" class="opacity-6 me-1">
-                      <g id="dashboard" stroke="none" stroke-width="1" fill-rule="evenodd">
-                        <g id="template" transform="translate(1.000000, 1.000000)">
-                          <path d="M0,1.71428571 C0,0.76752 0.76752,0 1.71428571,0 L22.2857143,0 C23.2325143,0 24,0.76752 24,1.71428571 L24,5.14285714 C24,6.08962286 23.2325143,6.85714286 22.2857143,6.85714286 L1.71428571,6.85714286 C0.76752,6.85714286 0,6.08962286 0,5.14285714 L0,1.71428571 Z"></path>
-                          <path d="M0,12 C0,11.0532171 0.76752,10.2857143 1.71428571,10.2857143 L12,10.2857143 C12.9468,10.2857143 13.7142857,11.0532171 13.7142857,12 L13.7142857,22.2857143 C13.7142857,23.2325143 12.9468,24 12,24 L1.71428571,24 C0.76752,24 0,23.2325143 0,22.2857143 L0,12 Z"></path>
-                          <path d="M18.8571429,10.2857143 C17.9103429,10.2857143 17.1428571,11.0532171 17.1428571,12 L17.1428571,22.2857143 C17.1428571,23.2325143 17.9103429,24 18.8571429,24 L22.2857143,24 C23.2325143,24 24,23.2325143 24,22.2857143 L24,12 C24,11.0532171 23.2325143,10.2857143 22.2857143,10.2857143 L18.8571429,10.2857143 Z"></path>
-                        </g>
-                      </g>
-                    </svg>
-                    Dashboard
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 " href="../pages/profile.php">
-                    <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="opacity-6 me-1">
-                      <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span>Profile</span>
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 " href="../pages/sign-up.html">
+                  <a class="nav-link d-flex align-items-center me-2 text-dark font-weight-bold" href="../pages/sign-in.html">
                     <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="opacity-6 me-1">
                       <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
                     </svg>
-                    Sign Up
+                    Logowanie
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link d-flex align-items-center me-2 text-dark font-weight-bold" href="../pages/sign-in.html">
+                  <a class="nav-link d-flex align-items-center me-2" href="../pages/sign-up.html">
                     <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class=" text-dark  me-1">
                       <path fill-rule="evenodd" d="M15.75 1.5a6.75 6.75 0 00-6.651 7.906c.067.39-.032.717-.221.906l-6.5 6.499a3 3 0 00-.878 2.121v2.818c0 .414.336.75.75.75H6a.75.75 0 00.75-.75v-1.5h1.5A.75.75 0 009 19.5V18h1.5a.75.75 0 00.53-.22l2.658-2.658c.19-.189.517-.288.906-.22A6.75 6.75 0 1015.75 1.5zm0 3a.75.75 0 000 1.5A2.25 2.25 0 0118 8.25a.75.75 0 001.5 0 3.75 3.75 0 00-3.75-3.75z" clip-rule="evenodd" />
                     </svg>
-                    Sign In
+                    Rejestracja
                   </a>
                 </li>
               </ul>
@@ -150,53 +127,53 @@ if ($stmt = $con->prepare('SELECT id, password, active FROM accounts WHERE usern
             <div class="col-xl-4 col-md-6 d-flex flex-column mx-auto">
               <div class="card card-plain mt-8">
                 <div class="card-header pb-0 text-left bg-transparent">
-                  <h3 class="font-weight-black text-dark display-6">Welcome back</h3>
-                  <p class="mb-0">Welcome back! Please enter your details.</p>
+                  <h3 class="font-weight-black text-dark display-6">Logowanie</h3>
+                  <p class="mb-0">Witaj ponownie! Wprowadź swoje dane.</p>
                 </div>
                 <div class="card-body">
                   <form role="form" action="authenticate.php" method="post">
-                    <label>Name</label>
+                    <label>Nazwa użytkownika</label>
                     <div class="mb-3">
-                      <input type="text" class="form-control" placeholder="Enter your name" aria-label="Name" aria-describedby="name-addon" name="username" id="username" required>
+                      <input type="text" class="form-control" placeholder="Wprowadź nazwę" aria-label="Name" aria-describedby="name-addon" name="username" id="username" required>
                     </div>
-                    <label>Password</label>
+                    <label>Hasło</label>
                     <div class="mb-3">
-                      <input type="password" class="form-control" placeholder="Enter password" aria-label="Password" aria-describedby="password-addon" name="password" id="password" required>
+                      <input type="password" class="form-control" placeholder="Wprowadź hasło" aria-label="Password" aria-describedby="password-addon" name="password" id="password" required>
                     </div>
                     <div class="d-flex align-items-center">
                       <div class="form-check form-check-info text-left mb-0">
                         <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
                         <label class="font-weight-normal text-dark mb-0" for="flexCheckDefault">
-                          Remember for 14 days
+                          Zapamiętaj na 14 dni
                         </label>
                       </div>
-                      <a href="javascript:;" class="text-xs font-weight-bold ms-auto">Forgot password?</a>
+                      <a href="javascript:;" class="text-xs font-weight-bold ms-auto">Brak dostępu do hasła?</a>
                     </div>
                     <div class="text-center">
-                      <button type="submit" class="btn btn-dark w-100 mt-4 mb-3">Sign in</button>
+                      <button type="submit" class="btn btn-dark w-100 mt-4 mb-3">Zaloguj się</button>
                       <button type="button" class="btn btn-white btn-icon w-100 mb-3">
                         <span class="btn-inner--icon me-1">
                           <img class="w-5" src="../assets/img/logos/google-logo.svg" alt="google-logo" />
                         </span>
-                        <span class="btn-inner--text">Sign in with Google</span>
+                        <span class="btn-inner--text">Zaloguj się przy użyciu Google</span>
                       </button>
                     </div>
                   </form>
                 </div>
                 <div class="card-footer text-center pt-0 px-lg-2 px-1">
                   <p class="mb-4 text-xs mx-auto">
-                    Don't have an account?
-                    <a href="./sign-up.html" class="text-dark font-weight-bold">Sign up</a>
+                    Nie masz konta?
+                    <a href="./sign-up.html" class="text-dark font-weight-bold">Zarejestruj się</a>
                   </p>
                 </div>
               </div>
             </div>
             <div class="col-md-6">
               <div class="position-absolute w-40 top-0 end-0 h-100 d-md-block d-none">
-                <div class="oblique-image position-absolute fixed-top ms-auto h-100 z-index-0 bg-cover ms-n8" style="background-image:url('../assets/img/image-sign-in.jpg')">
-                  <div class="blur mt-12 p-4 text-center border border-white border-radius-md position-absolute m-4">
+                <div class="oblique-image position-absolute fixed-top ms-auto h-100 z-index-0 bg-cover ms-n8" style="background-image:url('../assets/img/signup.jpg')">
+                  <div class="blur mt-12 p-4 text-center border border-white border-radius-md position-absolute fixed-bottom m-4">
                     <?php if (isset($result)) echo '<h2 class="mt-3 text-dark font-weight-bold">'.htmlspecialchars($result, ENT_QUOTES, 'UTF-8').'</h2>'; ?>
-                    <h6 class="text-dark text-sm mt-5">Copyright © 2022 Corporate UI Design System by Creative Tim.</h6>
+                    <h6 class="text-dark text-sm mt-5">Copyright © 2025 Jakub Makówka</h6>
                   </div>
                 </div>
               </div>

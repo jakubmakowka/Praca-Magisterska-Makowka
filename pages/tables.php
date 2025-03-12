@@ -14,10 +14,9 @@
 -->
 
 <?php
-// We need to use sessions, so you should always start sessions using the below code.
 session_start();
 include 'database.php';
-// If the user is not logged in redirect to the login page...
+
 if (!isset($_SESSION['loggedin'])) {
     header('Location: sign-in.html');
     exit;
@@ -28,13 +27,22 @@ $conn = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAM
 
 // Sprawdzenie połączenia
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die("Błąd połączenia: " . $conn->connect_error);
 }
 
 // Zapytanie SQL
 $sql = "SELECT id, name, current_amount, goal_amount, end_date FROM campaigns";
-$result = $conn->query($sql);
+if ($stmt = $conn->prepare($sql)) {
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    die("Błąd zapytania SQL: " . $conn->error);
+}
+
+// Zamknięcie połączenia po pobraniu danych
+$conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pl">
@@ -992,6 +1000,3 @@ $result = $conn->query($sql);
 </body>
 
 </html>
-<?php
-$conn->close();
-?>

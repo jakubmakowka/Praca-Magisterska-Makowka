@@ -14,13 +14,23 @@
 -->
 
 <?php
-// We need to use sessions, so you should always start sessions using the below code.
 session_start();
-// If the user is not logged in redirect to the login page...
+
+// Regeneracja identyfikatora sesji dla bezpieczeństwa
 if (!isset($_SESSION['loggedin'])) {
+    session_regenerate_id(true);
     header('Location: sign-in.html');
     exit;
 }
+
+// Opcjonalnie: ustawienie limitu czasu na sesję
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
+    session_unset(); 
+    session_destroy(); 
+    header('Location: sign-in.html');
+    exit;
+}
+$_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
 ?>
 
 <!DOCTYPE html>
