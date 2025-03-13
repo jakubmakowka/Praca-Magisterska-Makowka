@@ -39,8 +39,40 @@ if ($stmt = $conn->prepare($sql)) {
     die("Błąd zapytania SQL: " . $conn->error);
 }
 
-// Zamknięcie połączenia po pobraniu danych
-$conn->close();
+// Ustawienia paginacji
+$results_per_page = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $results_per_page;
+
+// Pobranie transakcji wszystkich użytkowników
+$sql_transactions = "SELECT transactions.timestamp, transactions.amount, campaigns.name AS campaign_name, transactions.type_id 
+                     FROM transactions 
+                     JOIN campaigns ON transactions.campaign_id = campaigns.id 
+                     ORDER BY transactions.timestamp DESC 
+                     LIMIT ? OFFSET ?";
+
+$stmt_transactions = $conn->prepare($sql_transactions);
+if (!$stmt_transactions) {
+    die("Błąd zapytania SQL: " . $conn->error);
+}
+$stmt_transactions->bind_param("ii", $results_per_page, $offset);
+$stmt_transactions->execute();
+$result_transactions = $stmt_transactions->get_result();
+
+// Pobranie liczby wszystkich transakcji
+$sql_count = "SELECT COUNT(*) AS total FROM transactions";
+$stmt_count = $conn->prepare($sql_count);
+if (!$stmt_count) {
+    die("Błąd zapytania SQL: " . $conn->error);
+}
+$stmt_count->execute();
+$result_count = $stmt_count->get_result();
+$total_transactions = $result_count->fetch_assoc()['total'] ?? 0;
+$total_pages = ceil($total_transactions / $results_per_page);
+
+// Zamknięcie zapytań
+$stmt_count->close();
+
 ?>
 
 
@@ -369,7 +401,6 @@ $conn->close();
           <div class="swiper mySwiper mt-4 mb-2">
             <div class="swiper-wrapper">
               <div class="swiper-slide">
-                <div>
                   <div class="card card-background shadow-none border-radius-xl card-background-after-none align-items-start mb-0">
                     <div class="full-background bg-cover" style="background-image: url('../assets/img/goals/1.jpg')"></div>
                     <div class="card-body text-start px-3 py-0 w-100">
@@ -386,7 +417,6 @@ $conn->close();
                       </div>
                     </div>
                   </div>
-                </div>
               </div>
               <div class="swiper-slide">
                 <div class="card card-background shadow-none border-radius-xl card-background-after-none align-items-start mb-0">
@@ -396,11 +426,11 @@ $conn->close();
                       <div class="col-sm-3 mt-auto">
                         <h4 class="text-white font-weight-bolder">#2</h4>
                         <p class="text-white opacity-6 text-xs font-weight-bolder mb-0">Nazwa</p>
-                        <h5 class="text-white font-weight-bolder">Na wózku do pracy</h5>
+                        <h5 class="text-white font-weight-bolder">Na wózku do pracy - projekt</h5>
                       </div>
                       <div class="col-sm-3 ms-auto mt-auto">
                         <p class="text-white opacity-6 text-xs font-weight-bolder mb-0">Kategoria</p>
-                        <h5 class="text-white font-weight-bolder">Praca</h5>
+                        <h5 class="text-white font-weight-bolder">Choroby</h5>
                       </div>
                     </div>
                   </div>
@@ -432,7 +462,7 @@ $conn->close();
                       <div class="col-sm-3 mt-auto">
                         <h4 class="text-white font-weight-bolder">#4</h4>
                         <p class="text-white opacity-6 text-xs font-weight-bolder mb-0">Nazwa</p>
-                        <h5 class="text-white font-weight-bolder">Dom samotnej matki w Krakowie</h5>
+                        <h5 class="text-white font-weight-bolder">Dom samotnej matki </h5>
                       </div>
                       <div class="col-sm-3 ms-auto mt-auto">
                         <p class="text-white opacity-6 text-xs font-weight-bolder mb-0">Kategoria</p>
@@ -502,23 +532,22 @@ $conn->close();
                     </span>
                     <input type="text" class="form-control form-control-sm" placeholder="Szukaj">
                   </div>
-                  <button type="button" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0 me-2">
-                    <span class="btn-inner--icon">
-                      <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                    </span>
-                    <span class="btn-inner--text">Pobierz</span>
-                  </button>
+                    <a href="export_pdf.php" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0 me-2">
+                      <span class="btn-inner--icon">
+                        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                      </span>
+                      <span class="btn-inner--text">Pobierz</span>
+                    </a>
                 </div>
               </div>
             </div>
             <div class="card-body px-0 py-0">
               <div class="table-responsive p-0">
-                <?php
+              <?php
                 if ($result->num_rows > 0) {
-                  // Rozpoczęcie tabeli HTML
-                  echo '<table class="table table-hover align-items-center justify-content-center mb-0">
+                    echo '<table class="table table-hover align-items-center justify-content-center mb-0">
                             <thead class="bg-gray-100">
                               <tr>
                                 <th class="text-secondary text-xs font-weight-semibold opacity-7">Kampania</th>
@@ -526,80 +555,52 @@ $conn->close();
                                 <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Cel</th>
                                 <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Status</th>
                                 <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Pasek progresu</th>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Data zakończenia kampanii</th>
+                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Data zakończenia</th>
                                 <th class="text-center text-secondary text-xs font-weight-semibold opacity-7"></th>
                               </tr>
-                            </thead>';
-                }
+                            </thead>
+                            <tbody>';
 
-                  // Pętla po wynikach zapytania
-                  while($row = $result->fetch_assoc()) {
-
-                    $progress = ($row['goal_amount'] > 0) ? ($row['current_amount'] / $row['goal_amount']) * 100 : 0;
-                    $progress = min($progress, 100); // Zapobiega przekroczeniu 100%
-
-                    $statusBadge = "";
-                    if ($row['current_amount'] >= $row['goal_amount']) {
-                        $statusBadge = '
-                        <td>
-                            <span class="badge badge-sm border border-success text-success bg-success">
-                                <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="me-1">
-                                    <path d="M1 4.42857L3.28571 6.71429L9 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                                Zakończono
-                            </span>
-                        </td>';
-                    } else {
-                        $statusBadge = '
-                        <td>
-                            <span class="badge badge-sm border border-warning text-warning bg-warning">
-                                <svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="me-1ca">
-                                    <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
-                                </svg>
-                                W trakcie
-                            </span>
-                        </td>';
+                    while ($row = $result->fetch_assoc()) {
+                        $name = htmlspecialchars($row['name']);
+                        $goal_amount = number_format($row['goal_amount'], 2, ',', ' ') . " zł";
+                        $current_amount = number_format($row['current_amount'], 2, ',', ' ') . " zł";
+                        $end_date = htmlspecialchars($row['end_date']);
+                        $progress = ($row['goal_amount'] > 0) ? min(($row['current_amount'] / $row['goal_amount']) * 100, 100) : 0;
+                        
+                        // Status
+                        $statusBadge = ($row['current_amount'] >= $row['goal_amount']) ?
+                            '<td><span class="badge badge-sm border border-success text-success bg-success">Zakończono</span></td>' :
+                            '<td><span class="badge badge-sm border border-warning text-warning bg-warning">W trakcie</span></td>';
+                        
+                        echo "<tr>
+                                <td>
+                                    <div class='d-flex px-2'>
+                                        <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
+                                            <img src='../assets/img/favicon.png' class='w-80' alt='kampania'>
+                                        </div>
+                                        <div class='my-auto'>
+                                            <h6 class='mb-0 text-sm'>$name</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><p class='text-sm font-weight-normal mb-0'>$current_amount</p></td>
+                                <td><p class='text-sm font-weight-normal mb-0'>$goal_amount</p></td>
+                                $statusBadge
+                                <td>
+                                    <div class='progress' style='height: 10px; width: 150px;'>
+                                        <div class='progress-bar bg-success' role='progressbar' style='width: $progress%;' aria-valuenow='$progress' aria-valuemin='0' aria-valuemax='100'></div>
+                                    </div>
+                                </td>
+                                <td><p class='text-sm font-weight-normal mb-0'>$end_date</p></td>
+                                <td class='align-middle'>
+                                    <a href='../pages/payment.php?campaign_id=" . intval($row['id']) . "' class='btn btn-sm btn-success btn-icon align-items-center mb-0 me-2'>Wpłać datek</a>
+                                </td>
+                              </tr>";
                     }
 
-                      echo "
-                      <tbody>
-                        <tr>
-                          <td>
-                            <div class=\"d-flex px-2\">
-                              <div class=\"avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2\">
-                                <img src=\"../assets/img//favicon.png\" class=\"w-80\" alt=\"spotify\">
-                              </div>
-                              <div class=\"my-auto\">
-                                <h6 class=\"mb-0 text-sm\">" . $row['name'] . "</h6>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <p class=\"text-sm font-weight-normal mb-0\">" . $row['current_amount'] . " zł</p>
-                          </td>
-                          <td>
-                            <p class=\"text-sm font-weight-normal mb-0\">" . $row['goal_amount'] . " zł</p>
-                          </td>
-                          " . $statusBadge . "
-                          <td>
-                            <div class=\"progress\" style=\"height: 10px; width: 150px;\">
-                              <div class=\"progress-bar bg-success\" role=\"progressbar\" style=\"width: $progress%;\" aria-valuenow=\"$progress\" aria-valuemin=\"0\" aria-valuemax=\"100\">
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <p class=\"text-sm font-weight-normal mb-0\">" . $row['end_date'] . " zł</p>
-                          </td>
-                        <td class=\"align-middle\">
-                          <a href=\"../pages/payment.php?campaign_id=" . $row['id'] . "\" class=\"btn btn-sm btn-success btn-icon align-items-center mb-0 me-2\">Wpłać datek</a>
-                        </td>
-                        </tr>
-                      </tbody>
-                      ";
-                  }
-
-                  // Zakończenie tabeli HTML
-                  echo "</table>";
+                    echo '</tbody></table>';
+                }
                 ?>
               </div>
               <div class="border-top py-3 px-3 d-flex align-items-center">
@@ -629,20 +630,12 @@ $conn->close();
             <div class="card-header border-bottom pb-0">
               <div class="d-sm-flex align-items-center">
                 <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Members list</h6>
-                  <p class="text-sm">See information about all members</p>
+                  <h6 class="font-weight-semibold text-lg mb-0">Ostatnie wpłaty</h6>
+                  <p class="text-sm">Historia wszystkich darowizn</p>
                 </div>
                 <div class="ms-auto d-flex">
                   <button type="button" class="btn btn-sm btn-white me-2">
-                    View all
-                  </button>
-                  <button type="button" class="btn btn-sm btn-dark btn-icon d-flex align-items-center me-2">
-                    <span class="btn-inner--icon">
-                      <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="d-block me-2">
-                        <path d="M6.25 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM3.25 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM19.75 7.5a.75.75 0 00-1.5 0v2.25H16a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H22a.75.75 0 000-1.5h-2.25V7.5z" />
-                      </svg>
-                    </span>
-                    <span class="btn-inner--text">Add member</span>
+                    Zobacz więcej
                   </button>
                 </div>
               </div>
@@ -651,11 +644,11 @@ $conn->close();
               <div class="border-bottom py-3 px-3 d-sm-flex align-items-center">
                 <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable1" autocomplete="off" checked>
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable1">All</label>
+                  <label class="btn btn-white px-3 mb-0" for="btnradiotable1">Wszystkie</label>
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable2" autocomplete="off">
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable2">Monitored</label>
+                  <label class="btn btn-white px-3 mb-0" for="btnradiotable2">Filtruj</label>
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable3" autocomplete="off">
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable3">Unmonitored</label>
+                  <label class="btn btn-white px-3 mb-0" for="btnradiotable3">Sortuj</label>
                 </div>
                 <div class="input-group w-sm-25 ms-auto">
                   <span class="input-group-text text-body">
@@ -667,206 +660,57 @@ $conn->close();
                 </div>
               </div>
               <div class="table-responsive p-0">
-                <table class="table align-items-center mb-0">
-                  <thead class="bg-gray-100">
+              <table class="table align-items-center mb-0 table-hover table-striped">
+                <thead class="bg-gray-100">
                     <tr>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7">Member</th>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Function</th>
-                      <th class="text-center text-secondary text-xs font-weight-semibold opacity-7">Status</th>
-                      <th class="text-center text-secondary text-xs font-weight-semibold opacity-7">Employed</th>
-                      <th class="text-secondary opacity-7"></th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Data</th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Kwota</th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Kampania</th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Forma płatności</th>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-2.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user1">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">John Michael</h6>
-                            <p class="text-sm text-secondary mb-0">john@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Manager</p>
-                        <p class="text-sm text-secondary mb-0">Organization</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-success text-success bg-success">Online</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">23/04/18</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-3.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user2">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Alexa Liras</h6>
-                            <p class="text-sm text-secondary mb-0">alexa@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Programator</p>
-                        <p class="text-sm text-secondary mb-0">Developer</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-secondary text-secondary bg-secondary">Offline</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">11/01/19</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-1.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user3">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Laurent Perrier</h6>
-                            <p class="text-sm text-secondary mb-0">laurent@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Executive</p>
-                        <p class="text-sm text-secondary mb-0">Projects</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-success text-success bg-success">Online</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">19/09/17</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/marie.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user4">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Michael Levi</h6>
-                            <p class="text-sm text-secondary mb-0">michael@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Programator</p>
-                        <p class="text-sm text-secondary mb-0">Developer</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-success text-success bg-success">Online</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">24/12/08</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-5.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user5">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Richard Gran</h6>
-                            <p class="text-sm text-secondary mb-0">richard@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Manager</p>
-                        <p class="text-sm text-secondary mb-0">Executive</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-secondary text-secondary bg-secondary">Offline</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">04/10/21</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div class="d-flex align-items-center">
-                            <img src="../assets/img/team-6.jpg" class="avatar avatar-sm rounded-circle me-2" alt="user6">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center ms-1">
-                            <h6 class="mb-0 text-sm font-weight-semibold">Miriam Eric</h6>
-                            <p class="text-sm text-secondary mb-0">miriam@creative-tim.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm text-dark font-weight-semibold mb-0">Programtor</p>
-                        <p class="text-sm text-secondary mb-0">Developer</p>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="badge badge-sm border border-secondary text-secondary bg-secondary">Offline</span>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="text-secondary text-sm font-weight-normal">14/09/20</span>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="border-top py-3 px-3 d-flex align-items-center">
-                <p class="font-weight-semibold mb-0 text-dark text-sm">Page 1 of 10</p>
-                <div class="ms-auto">
-                  <button class="btn btn-sm btn-white mb-0">Previous</button>
-                  <button class="btn btn-sm btn-white mb-0">Next</button>
-                </div>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result_transactions->fetch_assoc()): ?>
+                        <tr>
+                            <td>
+                            <div class='d-flex px-2'>
+                              <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
+                                <img src='../assets/img/coin.png' class='w-80' alt='kampania'>
+                              </div>
+                              <div class='my-auto'>
+                                <h6 class='mb-0 text-sm'><?php echo htmlspecialchars($row['timestamp']); ?></h6>
+                              </div>
+                            </div>
+                            </td>
+                            <td>
+                            <div class='d-flex px-2'>
+                              <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
+                                <img src='../assets/img/stonksup.png' class='w-80' alt='kampania'>
+                              </div>
+                              <div class='my-auto'>
+                                <?php echo number_format($row['amount'], 2, ',', ' '); ?> zł
+                              </div>
+                            </div>
+                            </td>
+                            <td><?php echo htmlspecialchars($row['campaign_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['type_id']); ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+            <!-- Paginacja -->
+            <div class="d-flex justify-content-center align-items-center mt-3 px-3">
+            <?php if ($page > 1): ?>
+              <a href="?page=<?php echo $page - 1; ?>" class="btn btn-secondary me-2">« Poprzednia</a>
+            <?php endif; ?>
+
+            <span class="d-flex align-items-center mb-3">
+              Strona <?php echo $page; ?> z <?php echo $total_pages; ?>
+            </span>
+
+            <?php if ($page < $total_pages): ?>
+              <a href="?page=<?php echo $page + 1; ?>" class="btn btn-secondary ms-2">Następna »</a>
+            <?php endif; ?>
               </div>
             </div>
           </div>
@@ -969,21 +813,24 @@ $conn->close();
   <script src="../assets/js/plugins/chartjs.min.js"></script>
   <script src="../assets/js/plugins/swiper-bundle.min.js" type="text/javascript"></script>
   <script>
-  if (document.getElementsByClassName('mySwiper')) {
-    var swiper = new Swiper(".mySwiper", {
-      effect: "cards",
-      grabCursor: true,
-      initialSlide: 0,
-      autoplay: {
-        delay: 1000,
-        disableOnInteraction: true,
-      },
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-    });
-  }
+if (document.getElementsByClassName('mySwiper')) {
+  var swiper = new Swiper(".mySwiper", {
+    effect: "slide", // Use the slide effect (default)
+    grabCursor: true,
+    centeredSlides: true, // Center the slides
+    slidesPerView: "auto", // View multiple slides at once
+    initialSlide: 0,
+    autoplay: {
+      delay: 2000, // Delay between slides
+      disableOnInteraction: true, // Don't stop autoplay on interaction
+    },
+    loop: true, // Infinite loop
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+  });
+}
 
   var win = navigator.platform.indexOf('Win') > -1;
   if (win && document.querySelector('#sidenav-scrollbar')) {
