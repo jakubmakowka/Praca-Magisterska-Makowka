@@ -30,7 +30,7 @@ if ($conn->connect_error) {
     die("Błąd połączenia: " . $conn->connect_error);
 }
 
-// Zapytanie SQL
+// Zapytanie SQL dla kampanii
 $sql = "SELECT id, name, current_amount, goal_amount, end_date FROM campaigns";
 if ($stmt = $conn->prepare($sql)) {
     $stmt->execute();
@@ -39,15 +39,16 @@ if ($stmt = $conn->prepare($sql)) {
     die("Błąd zapytania SQL: " . $conn->error);
 }
 
-// Ustawienia paginacji
+// Ustawienia paginacji dla transakcji
 $results_per_page = 10;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $results_per_page;
 
 // Pobranie transakcji wszystkich użytkowników
-$sql_transactions = "SELECT transactions.timestamp, transactions.amount, campaigns.name AS campaign_name, transactions.type_id 
+$sql_transactions = "SELECT transactions.timestamp, transactions.amount, campaigns.name AS campaign_name, types.name AS payment_type
                      FROM transactions 
-                     JOIN campaigns ON transactions.campaign_id = campaigns.id 
+                     JOIN campaigns ON transactions.campaign_id = campaigns.id
+                     JOIN types ON transactions.type_id = types.id
                      ORDER BY transactions.timestamp DESC 
                      LIMIT ? OFFSET ?";
 
@@ -75,7 +76,6 @@ $stmt_count->close();
 
 ?>
 
-
 <!DOCTYPE html>
 <html lang="pl">
 
@@ -93,7 +93,7 @@ $stmt_count->close();
   <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
   <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
   <!-- Font Awesome Icons -->
-  <script src="https://kit.fontawesome.com/349ee9c857.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/corporate-ui-dashboard.css?v=1.0.0" rel="stylesheet" />
@@ -515,205 +515,220 @@ $stmt_count->close();
         </div>
       </div>
       <div class="row">
-        <div class="col-12">
-          <div class="card border shadow-xs mb-4">
+    <div class="col-12">
+        <div class="card border shadow-xs mb-4">
             <div class="card-header border-bottom pb-0">
-              <div class="d-sm-flex align-items-center mb-3">
-                <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Wszystkie nasze kampanie</h6>
-                  <p class="text-sm mb-sm-0">Pomóż nam osiągnąć wspólne cele wpłacajać pieniądze na jedną z poniższych kampanii.</p>
+                <div class="d-sm-flex align-items-center mb-3">
+                    <div>
+                        <h6 class="font-weight-semibold text-lg mb-0">Wszystkie nasze kampanie</h6>
+                        <p class="text-sm mb-sm-0">Pomóż nam osiągnąć wspólne cele, wpłacając pieniądze na jedną z poniższych kampanii.</p>
+                    </div>
+                    <div class="ms-auto d-flex">
+                        <div class="input-group input-group-sm ms-auto me-2">
+                            <span class="input-group-text text-body">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
+                                </svg>
+                            </span>
+                            <input type="text" class="form-control form-control-sm" placeholder="Szukaj" id="searchInput">
+                        </div>
+                        <a href="export_pdf.php" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0 me-2">
+                            <span class="btn-inner--icon">
+                                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                            </span>
+                            <span class="btn-inner--text">Pobierz</span>
+                        </a>
+                    </div>
                 </div>
-                <div class="ms-auto d-flex">
-                  <div class="input-group input-group-sm ms-auto me-2">
-                    <span class="input-group-text text-body">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
-                      </svg>
-                    </span>
-                    <input type="text" class="form-control form-control-sm" placeholder="Szukaj">
-                  </div>
-                    <a href="export_pdf.php" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0 me-2">
-                      <span class="btn-inner--icon">
-                        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
-                      </span>
-                      <span class="btn-inner--text">Pobierz</span>
-                    </a>
-                </div>
-              </div>
             </div>
             <div class="card-body px-0 py-0">
-              <div class="table-responsive p-0">
-              <?php
-                if ($result->num_rows > 0) {
-                    echo '<table class="table table-hover align-items-center justify-content-center mb-0">
-                            <thead class="bg-gray-100">
-                              <tr>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7">Kampania</th>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Zebrana kwota</th>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Cel</th>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Status</th>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Pasek progresu</th>
-                                <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Data zakończenia</th>
-                                <th class="text-center text-secondary text-xs font-weight-semibold opacity-7"></th>
-                              </tr>
-                            </thead>
-                            <tbody>';
+                <div class="table-responsive p-0">
+                    <?php
+                    if ($result->num_rows > 0) {
+                        echo '<table class="table table-hover align-items-center justify-content-center mb-0" id="campaignsTable">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="text-secondary text-xs font-weight-semibold opacity-7">Kampania</th>
+                                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="current_amount">
+                                            Zebrana kwota
+                                            <i class="fas fa-sort ms-2"></i> <!-- Ikona sortowania -->
+                                        </th>
+                                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="goal_amount">
+                                            Cel
+                                            <i class="fas fa-sort ms-2"></i> <!-- Ikona sortowania -->
+                                        </th>
+                                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="status">
+                                            Status
+                                            <i class="fas fa-sort ms-2"></i> <!-- Ikona sortowania -->
+                                        </th>
+                                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Pasek progresu</th>
+                                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="end_date">
+                                            Data zakończenia
+                                            <i class="fas fa-sort ms-2"></i> <!-- Ikona sortowania -->
+                                        </th>
+                                        <th class="text-center text-secondary text-xs font-weight-semibold opacity-7"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>';
 
-                    while ($row = $result->fetch_assoc()) {
-                        $name = htmlspecialchars($row['name']);
-                        $goal_amount = number_format($row['goal_amount'], 2, ',', ' ') . " zł";
-                        $current_amount = number_format($row['current_amount'], 2, ',', ' ') . " zł";
-                        $end_date = htmlspecialchars($row['end_date']);
-                        $progress = ($row['goal_amount'] > 0) ? min(($row['current_amount'] / $row['goal_amount']) * 100, 100) : 0;
-                        
-                        // Status
-                        $statusBadge = ($row['current_amount'] >= $row['goal_amount']) ?
-                            '<td><span class="badge badge-sm border border-success text-success bg-success">Zakończono</span></td>' :
-                            '<td><span class="badge badge-sm border border-warning text-warning bg-warning">W trakcie</span></td>';
-                        
-                        echo "<tr>
-                                <td>
-                                    <div class='d-flex px-2'>
-                                        <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
-                                            <img src='../assets/img/favicon.png' class='w-80' alt='kampania'>
+                        while ($row = $result->fetch_assoc()) {
+                            $name = htmlspecialchars($row['name']);
+                            $goal_amount = number_format($row['goal_amount'], 2, ',', ' ') . " zł";
+                            $current_amount = number_format($row['current_amount'], 2, ',', ' ') . " zł";
+                            $end_date = htmlspecialchars($row['end_date']);
+                            $progress = ($row['goal_amount'] > 0) ? min(($row['current_amount'] / $row['goal_amount']) * 100, 100) : 0;
+                            
+                            // Status
+                            $statusBadge = ($row['current_amount'] >= $row['goal_amount']) ?
+                                '<td><span class="badge badge-sm border border-success text-success bg-success">Zakończono</span></td>' :
+                                '<td><span class="badge badge-sm border border-warning text-warning bg-warning">W trakcie</span></td>';
+                            
+                            echo "<tr>
+                                    <td>
+                                        <div class='d-flex px-2'>
+                                            <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
+                                                <img src='../assets/img/favicon.png' class='w-80' alt='kampania'>
+                                            </div>
+                                            <div class='my-auto'>
+                                                <h6 class='mb-0 text-sm'>$name</h6>
+                                            </div>
                                         </div>
-                                        <div class='my-auto'>
-                                            <h6 class='mb-0 text-sm'>$name</h6>
+                                    </td>
+                                    <td><p class='text-sm font-weight-normal mb-0'>$current_amount</p></td>
+                                    <td><p class='text-sm font-weight-normal mb-0'>$goal_amount</p></td>
+                                    $statusBadge
+                                    <td>
+                                        <div class='progress' style='height: 10px; width: 150px;'>
+                                            <div class='progress-bar bg-success' role='progressbar' style='width: $progress%;' aria-valuenow='$progress' aria-valuemin='0' aria-valuemax='100'></div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td><p class='text-sm font-weight-normal mb-0'>$current_amount</p></td>
-                                <td><p class='text-sm font-weight-normal mb-0'>$goal_amount</p></td>
-                                $statusBadge
-                                <td>
-                                    <div class='progress' style='height: 10px; width: 150px;'>
-                                        <div class='progress-bar bg-success' role='progressbar' style='width: $progress%;' aria-valuenow='$progress' aria-valuemin='0' aria-valuemax='100'></div>
-                                    </div>
-                                </td>
-                                <td><p class='text-sm font-weight-normal mb-0'>$end_date</p></td>
-                                <td class='align-middle'>
-                                    <a href='../pages/payment.php?campaign_id=" . intval($row['id']) . "' class='btn btn-sm btn-success btn-icon align-items-center mb-0 me-2'>Wpłać datek</a>
-                                </td>
-                              </tr>";
+                                    </td>
+                                    <td><p class='text-sm font-weight-normal mb-0'>$end_date</p></td>
+                                    <td class='align-middle'>
+                                        <a href='../pages/payment.php?campaign_id=" . intval($row['id']) . "' class='btn btn-sm btn-success btn-icon align-items-center mb-0 me-2'>Wpłać datek</a>
+                                    </td>
+                                  </tr>";
+                        }
+
+                        echo '</tbody></table>';
+                    } else {
+                        echo '<div class="text-center p-4">Brak dostępnych kampanii.</div>';
                     }
-
-                    echo '</tbody></table>';
-                }
-                ?>
-              </div>
-              <div class="border-top py-3 px-3 d-flex align-items-center">
-                <button class="btn btn-sm btn-white d-sm-block d-none mb-0">Previous</button>
-                <nav aria-label="..." class="ms-auto">
-                  <ul class="pagination pagination-light mb-0">
-                    <li class="page-item active" aria-current="page">
-                      <span class="page-link font-weight-bold">1</span>
-                    </li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">2</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold d-sm-inline-flex d-none" href="javascript:;">3</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">...</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold d-sm-inline-flex d-none" href="javascript:;">8</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">9</a></li>
-                    <li class="page-item"><a class="page-link border-0 font-weight-bold" href="javascript:;">10</a></li>
-                  </ul>
-                </nav>
-                <button class="btn btn-sm btn-white d-sm-block d-none mb-0 ms-auto">Next</button>
-              </div>
+                    ?>
+                </div>
+                <div class="border-top py-3 px-3 d-flex align-items-center">
+                    <button class="btn btn-sm btn-white d-sm-block d-none mb-0" id="prevPage">Poprzednia</button>
+                    <nav aria-label="..." class="ms-auto">
+                        <ul class="pagination pagination-light mb-0" id="pagination">
+                            <!-- Pagination links will be dynamically inserted here -->
+                        </ul>
+                    </nav>
+                    <button class="btn btn-sm btn-white d-sm-block d-none mb-0 ms-auto" id="nextPage">Następna</button>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
+    </div>
+</div>
       <div class="row">
         <div class="col-12">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-header border-bottom pb-0">
-              <div class="d-sm-flex align-items-center">
-                <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Ostatnie wpłaty</h6>
-                  <p class="text-sm">Historia wszystkich darowizn</p>
-                </div>
-                <div class="ms-auto d-flex">
-                  <button type="button" class="btn btn-sm btn-white me-2">
-                    Zobacz więcej
-                  </button>
-                </div>
-              </div>
+        <div class="card border shadow-xs mb-4">
+    <div class="card-header border-bottom pb-0">
+        <div class="d-sm-flex align-items-center">
+            <div>
+                <h6 class="font-weight-semibold text-lg mb-0">Ostatnie wpłaty</h6>
+                <p class="text-sm">Historia wszystkich darowizn</p>
             </div>
-            <div class="card-body px-0 py-0">
-              <div class="border-bottom py-3 px-3 d-sm-flex align-items-center">
-                <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-                  <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable1" autocomplete="off" checked>
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable1">Wszystkie</label>
-                  <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable2" autocomplete="off">
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable2">Filtruj</label>
-                  <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable3" autocomplete="off">
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable3">Sortuj</label>
-                </div>
-                <div class="input-group w-sm-25 ms-auto">
-                  <span class="input-group-text text-body">
+            <div class="ms-auto d-flex">
+                <button type="button" class="btn btn-sm btn-white me-2">
+                    Zobacz więcej
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body px-0 py-0">
+        <div class="border-bottom py-3 px-3 d-sm-flex align-items-center">
+            <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+                <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable1" autocomplete="off" checked>
+                <label class="btn btn-white px-3 mb-0" for="btnradiotable1">Wszystkie</label>
+                <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable2" autocomplete="off">
+                <label class="btn btn-white px-3 mb-0" for="btnradiotable2">Filtruj</label>
+                <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable3" autocomplete="off">
+                <label class="btn btn-white px-3 mb-0" for="btnradiotable3">Sortuj</label>
+            </div>
+            <div class="input-group w-sm-25 ms-auto">
+                <span class="input-group-text text-body">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                     </svg>
-                  </span>
-                  <input type="text" class="form-control" placeholder="Szukaj">
-                </div>
-              </div>
-              <div class="table-responsive p-0">
-              <table class="table align-items-center mb-0 table-hover table-striped">
+                </span>
+                <input type="text" class="form-control" placeholder="Szukaj">
+            </div>
+        </div>
+        <div class="table-responsive p-0">
+            <table class="table table-hover align-items-center justify-content-center mb-0" id="transactionsTable">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Data</th>
-                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Kwota</th>
-                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Kampania</th>
-                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Forma płatności</th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7">Data</th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="amount">
+                            Kwota
+                            <i class="fas fa-sort ms-2"></i>
+                        </th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="campaign_name">
+                            Kampania
+                            <i class="fas fa-sort ms-2"></i>
+                        </th>
+                        <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2 sortable" data-sort="payment_type">
+                            Forma płatności
+                            <i class="fas fa-sort ms-2"></i>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($row = $result_transactions->fetch_assoc()): ?>
                         <tr>
                             <td>
-                            <div class='d-flex px-2'>
-                              <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
-                                <img src='../assets/img/coin.png' class='w-80' alt='kampania'>
-                              </div>
-                              <div class='my-auto'>
-                                <h6 class='mb-0 text-sm'><?php echo htmlspecialchars($row['timestamp']); ?></h6>
-                              </div>
-                            </div>
+                                <div class='d-flex px-2'>
+                                    <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
+                                        <img src='../assets/img/coin.png' class='w-80' alt='data'>
+                                    </div>
+                                    <div class='my-auto'>
+                                        <h6 class='mb-0 text-sm'><?php echo htmlspecialchars($row['timestamp']); ?></h6>
+                                    </div>
+                                </div>
                             </td>
                             <td>
-                            <div class='d-flex px-2'>
-                              <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
-                                <img src='../assets/img/stonksup.png' class='w-80' alt='kampania'>
-                              </div>
-                              <div class='my-auto'>
-                                <?php echo number_format($row['amount'], 2, ',', ' '); ?> zł
-                              </div>
-                            </div>
+                                <div class='d-flex px-2'>
+                                    <div class='avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2'>
+                                        <img src='../assets/img/stonksup.png' class='w-80' alt='kwota'>
+                                    </div>
+                                    <div class='my-auto'>
+                                        <p class='text-sm font-weight-normal mb-0'><?php echo number_format($row['amount'], 2, ',', ' '); ?> zł</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td><?php echo htmlspecialchars($row['campaign_name']); ?></td>
-                            <td><?php echo htmlspecialchars($row['type_id']); ?></td>
+                            <td>
+                                <p class='text-sm font-weight-normal mb-0'><?php echo htmlspecialchars($row['campaign_name']); ?></p>
+                            </td>
+                            <td>
+                                <p class='text-sm font-weight-normal mb-0'><?php echo htmlspecialchars($row['payment_type']); ?></p>
+                            </td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
-            <!-- Paginacja -->
-            <div class="d-flex justify-content-center align-items-center mt-3 px-3">
-            <?php if ($page > 1): ?>
-              <a href="?page=<?php echo $page - 1; ?>" class="btn btn-secondary me-2">« Poprzednia</a>
-            <?php endif; ?>
-
-            <span class="d-flex align-items-center mb-3">
-              Strona <?php echo $page; ?> z <?php echo $total_pages; ?>
-            </span>
-
-            <?php if ($page < $total_pages): ?>
-              <a href="?page=<?php echo $page + 1; ?>" class="btn btn-secondary ms-2">Następna »</a>
-            <?php endif; ?>
-              </div>
-            </div>
-          </div>
+        </div>
+        <div class="border-top py-3 px-3 d-flex align-items-center">
+            <button class="btn btn-sm btn-white d-sm-block d-none mb-0" id="prevPageTransactions">Poprzednia</button>
+            <nav aria-label="..." class="ms-auto">
+                <ul class="pagination pagination-light mb-0" id="paginationTransactions">
+                    <!-- Pagination links will be dynamically inserted here -->
+                </ul>
+            </nav>
+            <button class="btn btn-sm btn-white d-sm-block d-none mb-0 ms-auto" id="nextPageTransactions">Następna</button>
+        </div>
+    </div>
+</div>
         </div>
       </div>
       <footer class="footer pt-3  ">
@@ -839,6 +854,167 @@ if (document.getElementsByClassName('mySwiper')) {
     }
     Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
   }
+</script>
+
+<!-- Skrypty JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Sortowanie tabeli kampanii
+    document.querySelectorAll('#campaignsTable .sortable').forEach(header => {
+        header.addEventListener('click', () => {
+            const table = document.getElementById('campaignsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const index = Array.from(header.parentNode.children).indexOf(header);
+            const isAscending = header.classList.toggle('asc');
+
+            // Usuń ikony sortowania z innych nagłówków
+            document.querySelectorAll('#campaignsTable .sortable i').forEach(icon => {
+                icon.classList.remove('fa-sort-up', 'fa-sort-down', 'text-primary');
+            });
+
+            // Dodaj odpowiednią ikonę do aktualnego nagłówka
+            const icon = header.querySelector('i');
+            if (isAscending) {
+                icon.classList.remove('fa-sort');
+                icon.classList.add('fa-sort-up', 'text-primary');
+            } else {
+                icon.classList.remove('fa-sort');
+                icon.classList.add('fa-sort-down', 'text-primary');
+            }
+
+            // Sortowanie wierszy
+            rows.sort((a, b) => {
+                const aValue = a.children[index].textContent.trim();
+                const bValue = b.children[index].textContent.trim();
+                return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            });
+
+            // Aktualizacja tabeli
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+
+    // Wyszukiwanie w tabeli kampanii
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#campaignsTable tbody tr');
+
+        rows.forEach(row => {
+            const name = row.querySelector('td h6').textContent.toLowerCase();
+            row.style.display = name.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Paginacja tabeli kampanii
+    const rowsPerPage = 10;
+    const rows = document.querySelectorAll('#campaignsTable tbody tr');
+    const pageCount = Math.ceil(rows.length / rowsPerPage);
+    const pagination = document.getElementById('pagination');
+
+    const updatePagination = (currentPage) => {
+        pagination.innerHTML = '';
+        for (let i = 1; i <= pageCount; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link border-0 font-weight-bold" href="javascript:;">${i}</a>`;
+            li.addEventListener('click', () => showPage(i));
+            pagination.appendChild(li);
+        }
+    };
+
+    const showPage = (page) => {
+        rows.forEach((row, index) => {
+            row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? '' : 'none';
+        });
+        updatePagination(page);
+    };
+
+    document.getElementById('prevPage').addEventListener('click', () => {
+        const currentPage = parseInt(document.querySelector('#pagination .page-item.active').textContent);
+        if (currentPage > 1) showPage(currentPage - 1);
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+        const currentPage = parseInt(document.querySelector('#pagination .page-item.active').textContent);
+        if (currentPage < pageCount) showPage(currentPage + 1);
+    });
+
+    // Inicjalizacja paginacji dla tabeli kampanii
+    showPage(1);
+
+    // Sortowanie tabeli transakcji
+    document.querySelectorAll('#transactionsTable .sortable').forEach(header => {
+        header.addEventListener('click', () => {
+            const table = document.getElementById('transactionsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const index = Array.from(header.parentNode.children).indexOf(header);
+            const isAscending = header.classList.toggle('asc');
+
+            // Usuń ikony sortowania z innych nagłówków
+            document.querySelectorAll('#transactionsTable .sortable i').forEach(icon => {
+                icon.classList.remove('fa-sort-up', 'fa-sort-down', 'text-primary');
+            });
+
+            // Dodaj odpowiednią ikonę do aktualnego nagłówka
+            const icon = header.querySelector('i');
+            if (isAscending) {
+                icon.classList.remove('fa-sort');
+                icon.classList.add('fa-sort-up', 'text-primary');
+            } else {
+                icon.classList.remove('fa-sort');
+                icon.classList.add('fa-sort-down', 'text-primary');
+            }
+
+            // Sortowanie wierszy
+            rows.sort((a, b) => {
+                const aValue = a.children[index].textContent.trim();
+                const bValue = b.children[index].textContent.trim();
+                return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            });
+
+            // Aktualizacja tabeli
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+
+    // Paginacja tabeli transakcji
+    const rowsPerPageTransactions = 10;
+    const rowsTransactions = document.querySelectorAll('#transactionsTable tbody tr');
+    const pageCountTransactions = Math.ceil(rowsTransactions.length / rowsPerPageTransactions);
+    const paginationTransactions = document.getElementById('paginationTransactions');
+
+    const updatePaginationTransactions = (currentPage) => {
+        paginationTransactions.innerHTML = '';
+        for (let i = 1; i <= pageCountTransactions; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link border-0 font-weight-bold" href="javascript:;">${i}</a>`;
+            li.addEventListener('click', () => showPageTransactions(i));
+            paginationTransactions.appendChild(li);
+        }
+    };
+
+    const showPageTransactions = (page) => {
+        rowsTransactions.forEach((row, index) => {
+            row.style.display = (index >= (page - 1) * rowsPerPageTransactions && index < page * rowsPerPageTransactions) ? '' : 'none';
+        });
+        updatePaginationTransactions(page);
+    };
+
+    document.getElementById('prevPageTransactions').addEventListener('click', () => {
+        const currentPage = parseInt(document.querySelector('#paginationTransactions .page-item.active').textContent);
+        if (currentPage > 1) showPageTransactions(currentPage - 1);
+    });
+
+    document.getElementById('nextPageTransactions').addEventListener('click', () => {
+        const currentPage = parseInt(document.querySelector('#paginationTransactions .page-item.active').textContent);
+        if (currentPage < pageCountTransactions) showPageTransactions(currentPage + 1);
+    });
+
+    // Inicjalizacja paginacji dla tabeli transakcji
+    showPageTransactions(1);
 </script>
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
