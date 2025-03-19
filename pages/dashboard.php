@@ -14,25 +14,136 @@
 -->
 
 <?php
-session_start();
+// Sprawdzenie, czy sesja już została uruchomiona
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Regeneracja identyfikatora sesji dla bezpieczeństwa
+include 'database.php';
+
+// Jeśli użytkownik nie jest zalogowany, przekieruj do strony logowania
 if (!isset($_SESSION['loggedin'])) {
-    session_regenerate_id(true);
     header('Location: sign-in.html');
-    exit;
+    exit();
 }
 
-// Opcjonalnie: ustawienie limitu czasu na sesję
-if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
-    session_unset(); 
-    session_destroy(); 
-    header('Location: sign-in.html');
-    exit;
+$user_id = $_SESSION['id'];
+
+// Połączenie z bazą danych
+$conn = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+
+// Sprawdzenie połączenia
+if ($conn->connect_error) {
+    die("Błąd połączenia: " . $conn->connect_error);
 }
-$_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
+
+// Pobranie danych
+$total_revenue = 0;
+$total_transactions = 0;
+$avg_transaction = 0;
+$monthly_revenue = 0;
+
+// Łączny przychód
+$sql_total_revenue = "SELECT SUM(amount) AS total_revenue FROM transactions";
+$result_total_revenue = $conn->query($sql_total_revenue);
+if ($result_total_revenue->num_rows > 0) {
+    $row = $result_total_revenue->fetch_assoc();
+    $total_revenue = $row['total_revenue'];
+}
+
+// Liczba transakcji
+$sql_total_transactions = "SELECT COUNT(*) AS total_transactions FROM transactions";
+$result_total_transactions = $conn->query($sql_total_transactions);
+if ($result_total_transactions->num_rows > 0) {
+    $row = $result_total_transactions->fetch_assoc();
+    $total_transactions = $row['total_transactions'];
+}
+
+// Średnia kwota transakcji
+$sql_avg_transaction = "SELECT AVG(amount) AS avg_transaction FROM transactions";
+$result_avg_transaction = $conn->query($sql_avg_transaction);
+if ($result_avg_transaction->num_rows > 0) {
+    $row = $result_avg_transaction->fetch_assoc();
+    $avg_transaction = $row['avg_transaction'];
+}
+
+// Miesięczne wpływy
+$sql_monthly_revenue = "SELECT SUM(amount) AS monthly_revenue 
+                        FROM transactions 
+                        WHERE timestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+$result_monthly_revenue = $conn->query($sql_monthly_revenue);
+if ($result_monthly_revenue->num_rows > 0) {
+    $row = $result_monthly_revenue->fetch_assoc();
+    $monthly_revenue = $row['monthly_revenue'];
+}
+
+// Pobranie danych do wykresu
+$sql = "SELECT DATE(timestamp) AS date, SUM(amount) AS total_amount 
+        FROM transactions 
+        WHERE timestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) 
+        GROUP BY DATE(timestamp) 
+        ORDER BY date ASC";
+$result = $conn->query($sql);
+
+$chart_data = [];
+while ($row = $result->fetch_assoc()) {
+    $chart_data[] = $row;
+}
+
+// Pobranie 5 użytkowników z największymi wpłatami
+$sql_top_users = "SELECT accounts.username AS username, SUM(amount) AS total_amount 
+                  FROM transactions
+                  JOIN accounts ON transactions.account_id = accounts.id
+                  GROUP BY account_id 
+                  ORDER BY total_amount DESC 
+                  LIMIT 5";
+$result_top_users = $conn->query($sql_top_users);
+
+$top_users = [];
+$top_users_labels = [];
+$top_users_data = [];
+
+if ($result_top_users->num_rows > 0) {
+    while ($row = $result_top_users->fetch_assoc()) {
+        $top_users[] = $row;
+        $top_users_labels[] = "" . $row['username']; // Możesz zastąpić "User X" nazwami użytkowników, jeśli masz dostęp do tabeli użytkowników
+        $top_users_data[] = $row['total_amount'];
+    }
+}
+
+// Pobranie 4 użytkowników z największą liczbą transakcji
+$sql_top_users_by_transactions = "SELECT 
+        accounts.username AS username, 
+        COUNT(*) AS total_transactions, 
+        SUM(amount) AS total_amount, 
+        MAX(timestamp) AS last_payment_date 
+    FROM transactions 
+    JOIN accounts ON transactions.account_id = accounts.id
+    GROUP BY account_id 
+    ORDER BY total_transactions DESC 
+    LIMIT 4";
+$result_top_users_by_transactions = $conn->query($sql_top_users_by_transactions);
+
+$top_users_by_transactions = [];
+if ($result_top_users_by_transactions->num_rows > 0) {
+    while ($row = $result_top_users_by_transactions->fetch_assoc()) {
+        $top_users_by_transactions[] = $row;
+    }
+}
+
+// Zamknięcie połączenia
+$conn->close();
+
+// Przekazanie danych do JavaScript
+echo "<script>";
+echo "var chartData = " . json_encode($chart_data) . ";";
+echo "</script>";
+
+echo "<script>";
+echo "var topUsersLabels = " . json_encode($top_users_labels) . ";";
+echo "var topUsersData = " . json_encode($top_users_data) . ";";
+echo "</script>";
 ?>
-
 <!DOCTYPE html>
 <html lang="pl">
 
@@ -44,7 +155,7 @@ $_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
   <title>
     Fundacja Makówka
   </title>
-  <!--     Fonts and icons     -->
+  <!-- Fonts and icons -->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet" />
   <!-- Nucleo Icons -->
   <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
@@ -351,58 +462,46 @@ $_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
       </div>
       <hr class="my-0">
       <div class="row my-4">
-        <div class="col-lg-4 col-md-6 mb-md-0 mb-4">
-          <div class="card shadow-xs border h-100">
-            <div class="card-header pb-0">
-              <h6 class="font-weight-semibold text-lg mb-0">Balances over time</h6>
-              <p class="text-sm">Here you have details about the balance.</p>
-              <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-                <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
-                <label class="btn btn-white px-3 mb-0" for="btnradio1">12 months</label>
-                <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
-                <label class="btn btn-white px-3 mb-0" for="btnradio2">30 days</label>
-                <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
-                <label class="btn btn-white px-3 mb-0" for="btnradio3">7 days</label>
-              </div>
-            </div>
-            <div class="card-body py-3">
-              <div class="chart mb-2">
-                <canvas id="chart-bars" class="chart-canvas" height="240"></canvas>
-              </div>
-              <button class="btn btn-white mb-0 ms-auto">View report</button>
+      <div class="col-lg-4 col-md-6 mb-md-0 mb-4">
+        <div class="card shadow-xs border h-100">
+          <div class="card-header pb-0">
+            <h6 class="font-weight-semibold text-lg mb-0">Najwięksi darczyńcy</h6>
+            <p class="text-sm">Użytkownicy z największą sumą wpłat łącznie.</p>
+          </div>
+          <div class="card-body py-3">
+            <div class="chart mb-2">
+              <canvas id="chart-top-users" class="chart-canvas" height="120"></canvas>
             </div>
           </div>
         </div>
+      </div>
         <div class="col-lg-8 col-md-6">
           <div class="card shadow-xs border">
             <div class="card-header border-bottom pb-0">
               <div class="d-sm-flex align-items-center mb-3">
                 <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Recent transactions</h6>
-                  <p class="text-sm mb-sm-0 mb-2">These are details about the last transactions</p>
+                  <h6 class="font-weight-semibold text-lg mb-0">Regularni darczyńcy</h6>
+                  <p class="text-sm mb-sm-0 mb-2">Użytkownicy z największą liczbą darowizn.</p>
                 </div>
                 <div class="ms-auto d-flex">
-                  <button type="button" class="btn btn-sm btn-white mb-0 me-2">
-                    View report
-                  </button>
-                  <button type="button" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0">
+                <a href="generate_pdf.php" class="btn btn-sm btn-dark btn-icon d-flex align-items-center mb-0">
                     <span class="btn-inner--icon">
-                      <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
+                        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
                     </span>
-                    <span class="btn-inner--text">Download</span>
-                  </button>
+                    <span class="btn-inner--text">Pobierz</span>
+                </a>
                 </div>
               </div>
               <div class="pb-3 d-sm-flex align-items-center">
                 <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable1" autocomplete="off" checked>
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable1">All</label>
+                  <label class="btn btn-white px-3 mb-0" for="btnradiotable1">Wszystkie</label>
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable2" autocomplete="off">
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable2">Monitored</label>
+                  <label class="btn btn-white px-3 mb-0" for="btnradiotable2">Monitorowane</label>
                   <input type="radio" class="btn-check" name="btnradiotable" id="btnradiotable3" autocomplete="off">
-                  <label class="btn btn-white px-3 mb-0" for="btnradiotable3">Unmonitored</label>
+                  <label class="btn btn-white px-3 mb-0" for="btnradiotable3">Potwierdzone</label>
                 </div>
                 <div class="input-group w-sm-25 ms-auto">
                   <span class="input-group-text text-body">
@@ -416,295 +515,155 @@ $_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
             </div>
             <div class="card-body px-0 py-0">
               <div class="table-responsive p-0">
-                <table class="table align-items-center justify-content-center mb-0">
-                  <thead class="bg-gray-100">
-                    <tr>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7">Transaction</th>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Amount</th>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Date</th>
-                      <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Account</th>
-                      <th class="text-center text-secondary text-xs font-weight-semibold opacity-7"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
-                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
-                            <img src="../assets/img/small-logos/logo-spotify.svg" class="w-80" alt="spotify">
-                          </div>
-                          <div class="my-auto">
-                            <h6 class="mb-0 text-sm">Spotify</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm font-weight-normal mb-0">$2,500</p>
-                      </td>
-                      <td>
-                        <span class="text-sm font-weight-normal">Wed 3:00pm</span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="d-flex">
-                          <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
-                            <img src="../assets/img/logos/visa.png" class="w-90 mx-auto" alt="visa">
-                          </div>
-                          <div class="ms-2">
-                            <p class="text-dark text-sm mb-0">Visa 1234</p>
-                            <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
-                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
-                            <img src="../assets/img/small-logos/logo-invision.svg" class="w-80" alt="invision">
-                          </div>
-                          <div class="my-auto">
-                            <h6 class="mb-0 text-sm">Invision</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm font-weight-normal mb-0">$5,000</p>
-                      </td>
-                      <td>
-                        <span class="text-sm font-weight-normal">Wed 1:00pm</span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="d-flex">
-                          <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
-                            <img src="../assets/img/logos/mastercard.png" class="w-90 mx-auto" alt="mastercard">
-                          </div>
-                          <div class="ms-2">
-                            <p class="text-dark text-sm mb-0">Mastercard 1234</p>
-                            <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
-                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
-                            <img src="../assets/img/small-logos/logo-jira.svg" class="w-80" alt="jira">
-                          </div>
-                          <div class="my-auto">
-                            <h6 class="mb-0 text-sm">Jira</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm font-weight-normal mb-0">$3,400</p>
-                      </td>
-                      <td>
-                        <span class="text-sm font-weight-normal">Mon 7:40pm</span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="d-flex">
-                          <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
-                            <img src="../assets/img/logos/mastercard.png" class="w-90 mx-auto" alt="mastercard">
-                          </div>
-                          <div class="ms-2">
-                            <p class="text-dark text-sm mb-0">Mastercard 1234</p>
-                            <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
-                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
-                            <img src="../assets/img/small-logos/logo-slack.svg" class="w-80" alt="slack">
-                          </div>
-                          <div class="my-auto">
-                            <h6 class="mb-0 text-sm">Slack</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <p class="text-sm font-weight-normal mb-0">$1,000</p>
-                      </td>
-                      <td>
-                        <span class="text-sm font-weight-normal">Wed 5:00pm</span>
-                      </td>
-                      <td class="align-middle">
-                        <div class="d-flex">
-                          <div class="border px-1 py-1 text-center d-flex align-items-center border-radius-sm my-auto">
-                            <img src="../assets/img/logos/visa.png" class="w-90 mx-auto" alt="visa">
-                          </div>
-                          <div class="ms-2">
-                            <p class="text-dark text-sm mb-0">Visa 1234</p>
-                            <p class="text-secondary text-sm mb-0">Expiry 06/2026</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <a href="javascript:;" class="text-secondary font-weight-bold text-xs" data-bs-toggle="tooltip" data-bs-title="Edit user">
-                          <svg width="14" height="14" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.2201 2.02495C10.8292 1.63482 10.196 1.63545 9.80585 2.02636C9.41572 2.41727 9.41635 3.05044 9.80726 3.44057L11.2201 2.02495ZM12.5572 6.18502C12.9481 6.57516 13.5813 6.57453 13.9714 6.18362C14.3615 5.79271 14.3609 5.15954 13.97 4.7694L12.5572 6.18502ZM11.6803 1.56839L12.3867 2.2762L12.3867 2.27619L11.6803 1.56839ZM14.4302 4.31284L15.1367 5.02065L15.1367 5.02064L14.4302 4.31284ZM3.72198 15V16C3.98686 16 4.24091 15.8949 4.42839 15.7078L3.72198 15ZM0.999756 15H-0.000244141C-0.000244141 15.5523 0.447471 16 0.999756 16L0.999756 15ZM0.999756 12.2279L0.293346 11.5201C0.105383 11.7077 -0.000244141 11.9624 -0.000244141 12.2279H0.999756ZM9.80726 3.44057L12.5572 6.18502L13.97 4.7694L11.2201 2.02495L9.80726 3.44057ZM12.3867 2.27619C12.7557 1.90794 13.3549 1.90794 13.7238 2.27619L15.1367 0.860593C13.9869 -0.286864 12.1236 -0.286864 10.9739 0.860593L12.3867 2.27619ZM13.7238 2.27619C14.0917 2.64337 14.0917 3.23787 13.7238 3.60504L15.1367 5.02064C16.2875 3.8721 16.2875 2.00913 15.1367 0.860593L13.7238 2.27619ZM13.7238 3.60504L3.01557 14.2922L4.42839 15.7078L15.1367 5.02065L13.7238 3.60504ZM3.72198 14H0.999756V16H3.72198V14ZM1.99976 15V12.2279H-0.000244141V15H1.99976ZM1.70617 12.9357L12.3867 2.2762L10.9739 0.86059L0.293346 11.5201L1.70617 12.9357Z" fill="#64748B" />
-                          </svg>
-                        </a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                  <table class="table align-items-center justify-content-center mb-0">
+                      <thead class="bg-gray-100">
+                          <tr>
+                              <th class="text-secondary text-xs font-weight-semibold opacity-7">Użytkownik</th>
+                              <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Liczba wpłat</th>
+                              <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Wpłaty łącznie</th>
+                              <th class="text-secondary text-xs font-weight-semibold opacity-7 ps-2">Ostatnia data płatności</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <?php foreach ($top_users_by_transactions as $user): ?>
+                              <tr>
+                                  <td>
+                                      <div class="d-flex px-2">
+                                          <div class="avatar avatar-sm rounded-circle bg-gray-100 me-2 my-2">
+                                              <img src="../assets/img/apple-icon.png" class="w-80" alt="user">
+                                          </div>
+                                          <div class="my-auto">
+                                              <h6 class="mb-0 text-sm">Użytkownik <?= htmlspecialchars($user['username'], ENT_QUOTES) ?></h6>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  <td>
+                                      <p class="text-sm font-weight-normal mb-0"><?= htmlspecialchars($user['total_transactions'], ENT_QUOTES) ?></p>
+                                  </td>
+                                  <td>
+                                      <p class="text-sm font-weight-normal mb-0"><?= htmlspecialchars(number_format($user['total_amount'], 2, '.', ' ')) ?> zł</p>
+                                  </td>
+                                  <td>
+                                      <span class="text-sm font-weight-normal"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($user['last_payment_date'])), ENT_QUOTES) ?></span>
+                                  </td>
+                              </tr>
+                          <?php endforeach; ?>
+                      </tbody>
+                  </table>
               </div>
-            </div>
+          </div>
           </div>
         </div>
       </div>
       <div class="row">
         <div class="col-xl-3 col-sm-6 mb-xl-0">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-body text-start p-3 w-100">
-              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
-                <svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15z" />
-                  <path fill-rule="evenodd" d="M22.5 9.75h-21v7.5a3 3 0 003 3h15a3 3 0 003-3v-7.5zm-18 3.75a.75.75 0 01.75-.75h6a.75.75 0 010 1.5h-6a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="row">
-                <div class="col-12">
-                  <div class="w-100">
-                    <p class="text-sm text-secondary mb-1">Revenue</p>
-                    <h4 class="mb-2 font-weight-bold">$99,118.5</h4>
-                    <div class="d-flex align-items-center">
-                      <span class="text-sm text-success font-weight-bolder">
-                        <i class="fa fa-chevron-up text-xs me-1"></i>10.5%
-                      </span>
-                      <span class="text-sm ms-1">from $89,740.00</span>
+            <div class="card border shadow-xs mb-4">
+                <div class="card-body text-start p-3 w-100">
+                    <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                        <svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15z" />
+                            <path fill-rule="evenodd" d="M22.5 9.75h-21v7.5a3 3 0 003 3h15a3 3 0 003-3v-7.5zm-18 3.75a.75.75 0 01.75-.75h6a.75.75 0 010 1.5h-6a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clip-rule="evenodd" />
+                        </svg>
                     </div>
-                  </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="w-100">
+                                <p class="text-sm text-secondary mb-1">Łączny przychód</p>
+                                <h4 class="mb-2 font-weight-bold"><?= number_format($total_revenue, 2) ?>zł</h4>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-sm text-success font-weight-bolder">
+                                        <i class="fa fa-chevron-up text-xs me-1"></i>10.5%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
         <div class="col-xl-3 col-sm-6 mb-xl-0">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-body text-start p-3 w-100">
-              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
-                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 013-3h3a3 3 0 013 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0112 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 017.5 5.455V5.25zm7.5 0v.09a49.488 49.488 0 00-6 0v-.09a1.5 1.5 0 011.5-1.5h3a1.5 1.5 0 011.5 1.5zm-3 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
-                  <path d="M3 18.4v-2.796a4.3 4.3 0 00.713.31A26.226 26.226 0 0012 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 01-6.477-.427C4.047 21.128 3 19.852 3 18.4z" />
-                </svg>
-              </div>
-              <div class="row">
-                <div class="col-12">
-                  <div class="w-100">
-                    <p class="text-sm text-secondary mb-1">Transactions</p>
-                    <h4 class="mb-2 font-weight-bold">376</h4>
-                    <div class="d-flex align-items-center">
-                      <span class="text-sm text-success font-weight-bolder">
-                        <i class="fa fa-chevron-up text-xs me-1"></i>55%
-                      </span>
-                      <span class="text-sm ms-1">from 243</span>
+            <div class="card border shadow-xs mb-4">
+                <div class="card-body text-start p-3 w-100">
+                    <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 013-3h3a3 3 0 013 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0112 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 017.5 5.455V5.25zm7.5 0v.09a49.488 49.488 0 00-6 0v-.09a1.5 1.5 0 011.5-1.5h3a1.5 1.5 0 011.5 1.5zm-3 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+                            <path d="M3 18.4v-2.796a4.3 4.3 0 00.713.31A26.226 26.226 0 0012 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 01-6.477-.427C4.047 21.128 3 19.852 3 18.4z" />
+                        </svg>
                     </div>
-                  </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="w-100">
+                                <p class="text-sm text-secondary mb-1">Liczba transakcji</p>
+                                <h4 class="mb-2 font-weight-bold"><?= $total_transactions ?></h4>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-sm text-success font-weight-bolder">
+                                        <i class="fa fa-chevron-up text-xs me-1"></i>55%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
         <div class="col-xl-3 col-sm-6 mb-xl-0">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-body text-start p-3 w-100">
-              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
-                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6zm4.5 7.5a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zm3.75-1.5a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0V12zm2.25-3a.75.75 0 01.75.75v6.75a.75.75 0 01-1.5 0V9.75A.75.75 0 0113.5 9zm3.75-1.5a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="row">
-                <div class="col-12">
-                  <div class="w-100">
-                    <p class="text-sm text-secondary mb-1">Avg. Transaction</p>
-                    <h4 class="mb-2 font-weight-bold">$450.53</h4>
-                    <div class="d-flex align-items-center">
-                      <span class="text-sm text-success font-weight-bolder">
-                        <i class="fa fa-chevron-up text-xs me-1"></i>22%
-                      </span>
-                      <span class="text-sm ms-1">from $369.30</span>
+            <div class="card border shadow-xs mb-4">
+                <div class="card-body text-start p-3 w-100">
+                    <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6zm4.5 7.5a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zm3.75-1.5a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0V12zm2.25-3a.75.75 0 01.75.75v6.75a.75.75 0 01-1.5 0V9.75A.75.75 0 0113.5 9zm3.75-1.5a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9z" clip-rule="evenodd" />
+                        </svg>
                     </div>
-                  </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="w-100">
+                                <p class="text-sm text-secondary mb-1">Średnia transakcja</p>
+                                <h4 class="mb-2 font-weight-bold"><?= number_format($avg_transaction, 2) ?>zł</h4>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-sm text-success font-weight-bolder">
+                                        <i class="fa fa-chevron-up text-xs me-1"></i>22%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-          <div class="card border shadow-xs mb-4">
-            <div class="card-body text-start p-3 w-100">
-              <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
-                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="row">
-                <div class="col-12">
-                  <div class="w-100">
-                    <p class="text-sm text-secondary mb-1">Coupon Sales</p>
-                    <h4 class="mb-2 font-weight-bold">$23,364.55</h4>
-                    <div class="d-flex align-items-center">
-                      <span class="text-sm text-success font-weight-bolder">
-                        <i class="fa fa-chevron-up text-xs me-1"></i>18%
-                      </span>
-                      <span class="text-sm ms-1">from $19,800.40</span>
+            <div class="card border shadow-xs mb-4">
+                <div class="card-body text-start p-3 w-100">
+                    <div class="icon icon-shape icon-sm bg-dark text-white text-center border-radius-sm d-flex align-items-center justify-content-center mb-3">
+                        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z" clip-rule="evenodd" />
+                        </svg>
                     </div>
-                  </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="w-100">
+                                <p class="text-sm text-secondary mb-1">Wpływy - miesiąc</p>
+                                <h4 class="mb-2 font-weight-bold"><?= number_format($monthly_revenue, 2) ?>zł</h4>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-sm text-success font-weight-bolder">
+                                        <i class="fa fa-chevron-up text-xs me-1"></i>18%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
+    </div>
       <div class="row">
         <div class="col-lg-12">
           <div class="card shadow-xs border">
-            <div class="card-header pb-0">
+            <div class="card-header pb-5">
               <div class="d-sm-flex align-items-center mb-3">
                 <div>
-                  <h6 class="font-weight-semibold text-lg mb-0">Overview balance</h6>
-                  <p class="text-sm mb-sm-0 mb-2">Here you have details about the balance.</p>
+                  <h6 class="font-weight-semibold text-lg mb-0">Wpływy - wykres miesięczny</h6>
+                  <p class="text-sm mb-sm-0 mb-2">Historia wpłat.</p>
                 </div>
-                <div class="ms-auto d-flex">
-                  <button type="button" class="btn btn-sm btn-white mb-0 me-2">
-                    View report
-                  </button>
-                </div>
-              </div>
-              <div class="d-sm-flex align-items-center">
-                <h3 class="mb-0 font-weight-semibold">$87,982.80</h3>
-                <span class="badge badge-sm border border-success text-success bg-success border-radius-sm ms-sm-3 px-2">
-                  <svg width="9" height="9" viewBox="0 0 10 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0.46967 4.46967C0.176777 4.76256 0.176777 5.23744 0.46967 5.53033C0.762563 5.82322 1.23744 5.82322 1.53033 5.53033L0.46967 4.46967ZM5.53033 1.53033C5.82322 1.23744 5.82322 0.762563 5.53033 0.46967C5.23744 0.176777 4.76256 0.176777 4.46967 0.46967L5.53033 1.53033ZM5.53033 0.46967C5.23744 0.176777 4.76256 0.176777 4.46967 0.46967C4.17678 0.762563 4.17678 1.23744 4.46967 1.53033L5.53033 0.46967ZM8.46967 5.53033C8.76256 5.82322 9.23744 5.82322 9.53033 5.53033C9.82322 5.23744 9.82322 4.76256 9.53033 4.46967L8.46967 5.53033ZM1.53033 5.53033L5.53033 1.53033L4.46967 0.46967L0.46967 4.46967L1.53033 5.53033ZM4.46967 1.53033L8.46967 5.53033L9.53033 4.46967L5.53033 0.46967L4.46967 1.53033Z" fill="#67C23A"></path>
-                  </svg>
-                  10.5%
-                </span>
               </div>
             </div>
             <div class="card-body p-3">
@@ -824,127 +783,75 @@ $_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
       });
     };
 
-
-    var ctx = document.getElementById("chart-bars").getContext("2d");
-
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-        datasets: [{
-            label: "Sales",
-            tension: 0.4,
-            borderWidth: 0,
-            borderSkipped: false,
-            backgroundColor: "#2ca8ff",
-            data: [450, 200, 100, 220, 500, 100, 400, 230, 500, 200],
-            maxBarThickness: 6
-          },
-          {
-            label: "Sales",
-            tension: 0.4,
-            borderWidth: 0,
-            borderSkipped: false,
-            backgroundColor: "#7c3aed",
-            data: [200, 300, 200, 420, 400, 200, 300, 430, 400, 300],
-            maxBarThickness: 6
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            backgroundColor: '#fff',
-            titleColor: '#1e293b',
-            bodyColor: '#1e293b',
-            borderColor: '#e9ecef',
-            borderWidth: 1,
-            usePointStyle: true
-          }
+    document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('chart-top-users').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: topUsersLabels,
+            datasets: [{
+                label: 'Total Deposits',
+                data: topUsersData,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
         },
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        scales: {
-          y: {
-            stacked: true,
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [4, 4],
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Kwota'
+                    },
+                    ticks: {
+                        // Dodanie "zł" do wartości na osi Y
+                        callback: function(value) {
+                            return value + ' zł';
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Użytkownicy'
+                    }
+                }
             },
-            ticks: {
-              beginAtZero: true,
-              padding: 10,
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            },
-          },
-          x: {
-            stacked: true,
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false
-            },
-            ticks: {
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            },
-          },
-        },
-      },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
     });
+});
 
 
     var ctx2 = document.getElementById("chart-line").getContext("2d");
 
-    var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
+var gradientStroke1 = ctx2.createLinearGradient(0, 230, 0, 50);
+gradientStroke1.addColorStop(1, 'rgba(45,168,255,0.2)');
+gradientStroke1.addColorStop(0.2, 'rgba(45,168,255,0.0)');
+gradientStroke1.addColorStop(0, 'rgba(45,168,255,0)'); // Niebieski gradient
 
-    gradientStroke1.addColorStop(1, 'rgba(45,168,255,0.2)');
-    gradientStroke1.addColorStop(0.2, 'rgba(45,168,255,0.0)');
-    gradientStroke1.addColorStop(0, 'rgba(45,168,255,0)'); //blue colors
+// Przygotowanie danych
+var labels = chartData.map(function(item) {
+    return item.date; // Daty z ostatnich 30 dni
+});
 
-    var gradientStroke2 = ctx2.createLinearGradient(0, 230, 0, 50);
+var data = chartData.map(function(item) {
+    return item.total_amount; // Suma kwot dla każdego dnia
+});
 
-    gradientStroke2.addColorStop(1, 'rgba(119,77,211,0.4)');
-    gradientStroke2.addColorStop(0.7, 'rgba(119,77,211,0.1)');
-    gradientStroke2.addColorStop(0, 'rgba(119,77,211,0)'); //purple colors
-
-    new Chart(ctx2, {
-      plugins: [{
-        beforeInit(chart) {
-          const originalFit = chart.legend.fit;
-          chart.legend.fit = function fit() {
-            originalFit.bind(chart.legend)();
-            this.height += 40;
-          }
-        },
-      }],
-      type: "line",
-      data: {
-        labels: ["Aug 18", "Aug 19", "Aug 20", "Aug 21", "Aug 22", "Aug 23", "Aug 24", "Aug 25", "Aug 26", "Aug 27", "Aug 28", "Aug 29", "Aug 30", "Aug 31", "Sept 01", "Sept 02", "Sept 03", "Aug 22", "Sept 04", "Sept 05", "Sept 06", "Sept 07", "Sept 08", "Sept 09"],
+// Tworzenie wykresu
+new Chart(ctx2, {
+    type: "line",
+    data: {
+        labels: labels, // Etykiety osi X (daty)
         datasets: [{
-            label: "Volume",
+            label: "Kwota",
             tension: 0,
             borderWidth: 2,
             pointRadius: 3,
@@ -953,109 +860,94 @@ $_SESSION['last_activity'] = time(); // Aktualizacja znacznika czasu aktywności
             pointBackgroundColor: '#2ca8ff',
             backgroundColor: gradientStroke1,
             fill: true,
-            data: [2828, 1291, 3360, 3223, 1630, 980, 2059, 3092, 1831, 1842, 1902, 1478, 1123, 2444, 2636, 2593, 2885, 1764, 898, 1356, 2573, 3382, 2858, 4228],
+            data: data, // Dane do wykresu (sumy kwot)
             maxBarThickness: 6
-
-          },
-          {
-            label: "Trade",
-            tension: 0,
-            borderWidth: 2,
-            pointRadius: 3,
-            borderColor: "#832bf9",
-            pointBorderColor: '#832bf9',
-            pointBackgroundColor: '#832bf9',
-            backgroundColor: gradientStroke2,
-            fill: true,
-            data: [2797, 2182, 1069, 2098, 3309, 3881, 2059, 3239, 6215, 2185, 2115, 5430, 4648, 2444, 2161, 3018, 1153, 1068, 2192, 1152, 2129, 1396, 2067, 1215, 712, 2462, 1669, 2360, 2787, 861],
-            maxBarThickness: 6
-          },
-        ],
-      },
-      options: {
+        }],
+    },
+    options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            align: 'end',
-            labels: {
-              boxWidth: 6,
-              boxHeight: 6,
-              padding: 20,
-              pointStyle: 'circle',
-              borderRadius: 50,
-              usePointStyle: true,
-              font: {
-                weight: 400,
-              },
+            legend: {
+                display: true,
+                position: 'top',
+                align: 'end',
+                labels: {
+                    boxWidth: 6,
+                    boxHeight: 6,
+                    padding: 20,
+                    pointStyle: 'circle',
+                    borderRadius: 50,
+                    usePointStyle: true,
+                    font: {
+                        weight: 400,
+                    },
+                },
             },
-          },
-          tooltip: {
-            backgroundColor: '#fff',
-            titleColor: '#1e293b',
-            bodyColor: '#1e293b',
-            borderColor: '#e9ecef',
-            borderWidth: 1,
-            pointRadius: 2,
-            usePointStyle: true,
-            boxWidth: 8,
-          }
+            tooltip: {
+                backgroundColor: '#fff',
+                titleColor: '#1e293b',
+                bodyColor: '#1e293b',
+                borderColor: '#e9ecef',
+                borderWidth: 1,
+                pointRadius: 2,
+                usePointStyle: true,
+                boxWidth: 8,
+            }
         },
         interaction: {
-          intersect: false,
-          mode: 'index',
+            intersect: false,
+            mode: 'index',
         },
         scales: {
-          y: {
-            grid: {
-              drawBorder: false,
-              display: true,
-              drawOnChartArea: true,
-              drawTicks: false,
-              borderDash: [4, 4]
+            y: {
+                grid: {
+                    drawBorder: false,
+                    display: true,
+                    drawOnChartArea: true,
+                    drawTicks: false,
+                    borderDash: [4, 4]
+                },
+                ticks: {
+                    callback: function(value, index, ticks) {
+                        return parseInt(value).toLocaleString() + ' zł'; // Formatowanie osi Y
+                    },
+                    display: true,
+                    padding: 10,
+                    color: '#b2b9bf',
+                    font: {
+                        size: 12,
+                        family: "Noto Sans",
+                        style: 'normal',
+                        lineHeight: 2
+                    },
+                    color: "#64748B"
+                }
             },
-            ticks: {
-              callback: function(value, index, ticks) {
-                return parseInt(value).toLocaleString() + ' EUR';
-              },
-              display: true,
-              padding: 10,
-              color: '#b2b9bf',
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            }
-          },
-          x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-              borderDash: [4, 4]
+            x: {
+                grid: {
+                    drawBorder: false,
+                    display: false,
+                    drawOnChartArea: false,
+                    drawTicks: false,
+                    borderDash: [4, 4]
+                },
+                ticks: {
+                    display: true,
+                    color: '#b2b9bf',
+                    padding: 20,
+                    font: {
+                        size: 12,
+                        family: "Noto Sans",
+                        style: 'normal',
+                        lineHeight: 2
+                    },
+                    color: "#64748B"
+                }
             },
-            ticks: {
-              display: true,
-              color: '#b2b9bf',
-              padding: 20,
-              font: {
-                size: 12,
-                family: "Noto Sans",
-                style: 'normal',
-                lineHeight: 2
-              },
-              color: "#64748B"
-            }
-          },
         },
-      },
-    });
+    },
+ });
   </script>
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
