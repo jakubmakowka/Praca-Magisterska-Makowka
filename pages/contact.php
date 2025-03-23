@@ -1,78 +1,51 @@
 <?php
 session_start();
-require 'database.php';
+require_once 'database.php';
 
-// Funkcja do bezpiecznego przekierowania
-function redirect($location) {
-    header("Location: $location");
+// Sprawdź, czy użytkownik jest zalogowany
+if (!isset($_SESSION['loggedin'])) {
+    header('Location: sign-in.html');
     exit;
 }
 
-// Sprawdzenie autoryzacji
-if (!isset($_SESSION['loggedin'], $_SESSION['name']) || $_SESSION['name'] !== 'makowka') {
-    redirect('sign-in.html');
-}
+// Obsługa formularza
+$error = '';
+$success = '';
 
-try {
-    // Połączenie z bazą danych
-    $conn = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-    if ($conn->connect_error) {
-        throw new Exception('Błąd połączenia z bazą danych: ' . $conn->connect_error);
-    }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $subject = trim($_POST['subject']);
+    $message = trim($_POST['message']);
 
-    // Pobranie listy nieaktywnych kont
-    $pending_users = [];
-    $result = $conn->query("SELECT username, email FROM accounts WHERE active = 0");
-    if ($result) {
-        $pending_users = $result->fetch_all(MYSQLI_ASSOC);
-        $result->free();
+    // Walidacja danych
+    if (empty($name) || empty($email) || empty($subject) || empty($message)) {
+        $error = 'Wszystkie pola są wymagane.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Podaj poprawny adres e-mail.';
     } else {
-        throw new Exception('Błąd zapytania SQL: ' . $conn->error);
-    }
-
-    // Pobranie listy wiadomości kontaktowych
-    $contact_messages = [];
-    $result = $conn->query("SELECT id, name, email, subject, message, created_at, is_read FROM contact_messages ORDER BY created_at DESC");
-    if ($result) {
-        $contact_messages = $result->fetch_all(MYSQLI_ASSOC);
-        $result->free();
-    } else {
-        throw new Exception('Błąd zapytania SQL: ' . $conn->error);
-    }
-
-    // Obsługa akcji POST
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        if (!empty($_POST['confirm'])) {
-            // Potwierdzenie pojedynczego użytkownika
-            $username = $_POST['confirm'];
-            $stmt = $conn->prepare('UPDATE accounts SET active = 1 WHERE username = ?');
-            $stmt->bind_param('s', $username);
-            $stmt->execute();
-            $stmt->close();
-        } elseif (!empty($_POST['bulk_confirm']) && is_array($_POST['bulk_confirm'])) {
-            // Potwierdzenie wielu użytkowników (checkboxy)
-            $stmt = $conn->prepare('UPDATE accounts SET active = 1 WHERE username = ?');
-            foreach ($_POST['bulk_confirm'] as $username) {
-                $stmt->bind_param('s', $username);
-                $stmt->execute();
+        // Zapisz wiadomość do bazy danych
+        try {
+            $conn = new mysqli($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+            if ($conn->connect_error) {
+                throw new Exception('Błąd połączenia z bazą danych: ' . $conn->connect_error);
             }
+
+            $stmt = $conn->prepare('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)');
+            $stmt->bind_param('ssss', $name, $email, $subject, $message);
+
+            if ($stmt->execute()) {
+                $success = 'Wiadomość została wysłana pomyślnie!';
+            } else {
+                throw new Exception('Błąd podczas zapisywania wiadomości: ' . $stmt->error);
+            }
+
             $stmt->close();
-        } elseif (!empty($_POST['mark_as_read'])) {
-            // Oznacz wiadomość jako przeczytaną
-            $message_id = $_POST['mark_as_read'];
-            $stmt = $conn->prepare('UPDATE contact_messages SET is_read = TRUE WHERE id = ?');
-            $stmt->bind_param('i', $message_id);
-            $stmt->execute();
-            $stmt->close();
+            $conn->close();
+        } catch (Exception $e) {
+            $error = $e->getMessage();
         }
-
-        redirect($_SERVER['PHP_SELF']); // Odświeżenie strony po akcji
     }
-
-    $conn->close();
-
-} catch (Exception $e) {
-    $error = $e->getMessage();
 }
 ?>
 
@@ -83,13 +56,17 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
     <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-    <title>Fundacja Makówka - Panel Administratora</title>
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet">
+    <title>Fundacja Makówka - Kontakt</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Noto+Sans:300,400,500,600,700,800|PT+Mono:300,400,500,600,700" rel="stylesheet">
     <link href="../assets/css/nucleo-icons.css" rel="stylesheet">
     <link href="../assets/css/nucleo-svg.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/349ee9c857.js" crossorigin="anonymous"></script>
     <link href="../assets/css/corporate-ui-dashboard.css?v=1.0.0" rel="stylesheet">
+    <style>
+        .form-control { margin-bottom: 1rem; }
+        .alert { margin-top: 1rem; }
+    </style>
 </head>
 <body class="g-sidenav-show bg-gray-100">
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 bg-slate-900 fixed-start" id="sidenav-main">
@@ -216,21 +193,22 @@ try {
         </div>
     </div>
 </aside>
+
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
         <nav class="navbar navbar-main navbar-expand-lg mx-5 px-0 shadow-none rounded" id="navbarBlur" navbar-scroll="true">
             <div class="container-fluid py-1 px-2">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb bg-transparent mb-1 pb-0 pt-1 px-0 me-sm-6 me-5">
                         <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="#">Aplikacja</a></li>
-                        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Zarządzanie</li>
+                        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Kontakt</li>
                     </ol>
-                    <h6 class="font-weight-bold mb-0">Panel administratora</h6>
+                    <h6 class="font-weight-bold mb-0">Formularz</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                     <div class="ms-md-auto pe-md-3 d-flex align-items-center">
                         <div class="input-group">
                             <span class="input-group-text text-body bg-white border-end-0"><svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg></span>
-                            <input type="text" class="form-control ps-0" placeholder="Szukaj">
+                            <input type="text" class="form-control ps-0 filter-input" placeholder="Szukaj raportów" id="reportFilter">
                         </div>
                     </div>
                     <ul class="navbar-nav justify-content-end">
@@ -248,119 +226,44 @@ try {
                 </div>
             </div>
         </nav>
-
         <div class="container-fluid py-4 px-5">
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger text-white" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+            <?php if (!empty($error)): ?>
+                <div class="alert alert-danger text-white" role="alert"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
+            <?php if (!empty($success)): ?>
+                <div class="alert alert-success text-white" role="alert"><?= htmlspecialchars($success) ?></div>
             <?php endif; ?>
 
-            <!-- Sekcja dla oczekujących kont -->
             <div class="row">
-                <div class="col-md-12">
-                    <div class="d-md-flex align-items-center mb-3 mx-2">
-                        <div class="mb-md-0 mb-3">
-                            <h3 class="font-weight-bold mb-0 pt-5 pb-3">Lista kont oczekujących na zatwierdzenie</h3>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-white btn-icon d-flex align-items-center mb-0 ms-md-auto mb-sm-0 mb-2 me-2" onclick="location.reload();">
-                            <span class="btn-inner--icon"><svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="d-block me-2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></span>
-                            <span class="btn-inner--text">Sync</span>
-                        </button>
-                    </div>
+                <div class="col-md-8">
+                    <h3 class="font-weight-semibold mb-1">Skontaktuj się z nami</h3>
+                    <p class="text-sm">Masz pytania lub sugestie? Napisz do nas!</p>
                 </div>
             </div>
-            <hr class="my-0">
+            <hr class="horizontal mb-4 dark">
             <div class="row">
-                <div class="col-12">
-                    <form method="post" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>">
-                        <table class="table align-items-center justify-content-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nazwa</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Akcja</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Zatwierdź</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($pending_users)): ?>
-                                    <tr><td colspan="4" class="text-center">Brak oczekujących kont.</td></tr>
-                                <?php else: ?>
-                                    <?php foreach ($pending_users as $user): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><?= htmlspecialchars($user['email'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td>
-                                                <button type="submit" name="confirm" value="<?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?>" class="btn btn-sm btn-success btn-icon mb-0 me-2">Potwierdź</button>
-                                            </td>
-                                            <td>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="bulk_confirm[]" value="<?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?>">
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    <tr>
-                                        <td colspan="4" class="text-end">
-                                            <button type="submit" class="btn btn-sm btn-primary mb-0">Potwierdź wybrane</button>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                <div class="col-md-8">
+                    <form method="POST" action="contact.php">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Imię i nazwisko</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email" class="form-label">Adres e-mail</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject" class="form-label">Temat</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message" class="form-label">Wiadomość</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Wyślij wiadomość</button>
                     </form>
                 </div>
             </div>
-
-            <!-- Sekcja dla wiadomości kontaktowych -->
-            <div class="row mt-5">
-                <div class="col-md-12">
-                    <h3 class="font-weight-bold mb-0 pt-5 pb-3">Wiadomości kontaktowe</h3>
-                    <hr class="my-0">
-                    <div class="table-responsive">
-                        <table class="table align-items-center justify-content-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nadawca</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Temat</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Wiadomość</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Data</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Akcja</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($contact_messages)): ?>
-                                    <tr><td colspan="7" class="text-center">Brak wiadomości.</td></tr>
-                                <?php else: ?>
-                                    <?php foreach ($contact_messages as $message): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($message['name'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><?= htmlspecialchars($message['email'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><?= htmlspecialchars($message['subject'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><?= htmlspecialchars($message['message'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><?= htmlspecialchars($message['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td>
-                                                <span class="badge badge-sm <?= $message['is_read'] ? 'bg-success' : 'bg-warning' ?>">
-                                                    <?= $message['is_read'] ? 'Przeczytano' : 'Nowa' ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <?php if (!$message['is_read']): ?>
-                                                    <form method="post" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>" style="display: inline;">
-                                                        <button type="submit" name="mark_as_read" value="<?= htmlspecialchars($message['id'], ENT_QUOTES, 'UTF-8') ?>" class="btn btn-sm btn-primary btn-icon mb-0 me-2">Oznacz jako przeczytane</button>
-                                                    </form>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
             <footer class="footer pt-3">
                 <div class="container-fluid">
                     <div class="row align-items-center justify-content-lg-between">
@@ -382,7 +285,6 @@ try {
             </footer>
         </div>
     </main>
-
     <div class="fixed-plugin">
         <a class="fixed-plugin-button text-dark position-fixed px-3 py-2"><i class="fa fa-cog py-2"></i></a>
         <div class="card shadow-lg">
@@ -420,7 +322,6 @@ try {
             </div>
         </div>
     </div>
-
     <script src="../assets/js/core/popper.min.js"></script>
     <script src="../assets/js/core/bootstrap.min.js"></script>
     <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>

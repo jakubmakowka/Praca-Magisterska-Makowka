@@ -621,6 +621,30 @@ progress {
   }
 }
 
+.sidenav .nav-item.active {
+  background-color: rgba(255, 255, 255, 0.1); /* Lekkie tło dla aktywnej karty */
+  border-left: 3px solid #ffffff; /* Biała ramka po lewej stronie */
+  border-radius: 4px; /* Zaokrąglenie rogów */
+}
+
+.sidenav .nav-item.active .nav-link {
+  padding-left: 12px; /* Dostosowanie paddingu dla lepszego wyglądu */
+}
+
+.sidenav .nav-item.active .nav-link i {
+  color: #ffffff; /* Biały kolor ikony */
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  border-color: #ffffff !important;
+}
+
 .list-unstyled {
   padding-left: 0;
   list-style: none;

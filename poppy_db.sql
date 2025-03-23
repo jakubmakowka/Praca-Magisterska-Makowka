@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 19, 2025 at 09:09 PM
+-- Generation Time: Mar 23, 2025 at 10:28 PM
 -- Wersja serwera: 10.4.32-MariaDB
 -- Wersja PHP: 8.0.30
 
@@ -44,10 +44,11 @@ INSERT INTO `accounts` (`id`, `username`, `password`, `email`, `active`) VALUES
 (11, 'Zuzanna', '$2y$10$p3im.YEWe3zVyfR5CzRJLOSL22xdGpYxwhx9TbU7aMil13PqiSQMS', 'zuz@wp.pl', 1),
 (12, 'Paweł', '$2y$10$UCEZlK6prFkXsFg/ueLs7e2TGWUYBtzaUix4zIWf3lfiba7M6BMFq', 'test@test.pl', 1),
 (13, 'Anna', '$2y$10$69nOxGoS41rIE0nrEmSyc.3XxIsTaGlZBCO15mQQWsZJX9FId8w46', 'zuzia@wp.pl', 1),
-(15, 'test2', '$2y$10$QkiOTxM6/E5iSe7a5t39qOAjxZq2GpM3nK0MUPHsvldqBwHjqnfo2', 'test@wp.pl', 0),
-(16, 'test3', '$2y$10$gpAo74RHv6eAwiYgJO2WmOTZ4.J/Q3.Izcel7gsPe44feqTDOQiLG', 'test3@wp.pl', 0),
+(15, 'test2', '$2y$10$QkiOTxM6/E5iSe7a5t39qOAjxZq2GpM3nK0MUPHsvldqBwHjqnfo2', 'test@wp.pl', 1),
+(16, 'test3', '$2y$10$gpAo74RHv6eAwiYgJO2WmOTZ4.J/Q3.Izcel7gsPe44feqTDOQiLG', 'test3@wp.pl', 1),
 (17, 'test4', '$2y$10$3ojSzK5BMwh/9.Wd3/6ylOBlHfvl/xlXbJdP.k/1YM7/IwXhvhQa6', 'test@wp.pl', 0),
-(18, 'test45', '$2y$10$SnQdnLpc2Vgsq0Z90QFjM.PC0AzF/XdituEujsY1Ufz2bq4A5z9fC', 'makowka@wp.pl', 0);
+(18, 'test45', '$2y$10$SnQdnLpc2Vgsq0Z90QFjM.PC0AzF/XdituEujsY1Ufz2bq4A5z9fC', 'makowka@wp.pl', 0),
+(19, 'makowka2', '$2y$10$2A6l8hy7W2rrZ5ihi1F52uVfj0il8GKE4bGbOAXMpyWAijevBm8o2', 'makowka@onet.pl', 1);
 
 -- --------------------------------------------------------
 
@@ -72,8 +73,60 @@ INSERT INTO `campaigns` (`id`, `name`, `goal_amount`, `current_amount`, `end_dat
 (2, 'Na wózku do pracy', 10000, 10500, '2025-02-28'),
 (3, 'Pacjenci onkologiczni', 20000, 800, '2025-02-28'),
 (4, 'Dom samotnej matki w Krakowie', 7000, 7000, '2025-02-28'),
-(5, 'Dzieci chore terminalnie', 12000, 12015, '2025-02-28'),
+(5, 'Dla najmłodszych podopiecznych', 12000, 12015, '2025-02-28'),
 (6, 'Dom starców w Krakowie', 14500, 55, '2025-02-28');
+
+-- --------------------------------------------------------
+
+--
+-- Struktura tabeli dla tabeli `contact_messages`
+--
+
+CREATE TABLE `contact_messages` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `subject` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_read` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_polish_ci;
+
+--
+-- Dumping data for table `contact_messages`
+--
+
+INSERT INTO `contact_messages` (`id`, `name`, `email`, `subject`, `message`, `created_at`, `is_read`) VALUES
+(1, 'Jakub Mak', 'jawdka@wp.pl', 'Test', 'Testowa wiadomość', '2025-03-23 19:51:30', 1),
+(2, 'Zuzanna Test', 'zuza@wp.pl', 'Sprawdzam', 'Czy wiadomości trafiają do adresata?', '2025-03-23 20:00:38', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Struktura tabeli dla tabeli `reports`
+--
+
+CREATE TABLE `reports` (
+  `report_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `status` enum('Opublikowano','W przygotowaniu') DEFAULT 'W przygotowaniu',
+  `code` varchar(50) NOT NULL,
+  `published_date` date NOT NULL,
+  `file_path` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_polish_ci;
+
+--
+-- Dumping data for table `reports`
+--
+
+INSERT INTO `reports` (`report_id`, `title`, `status`, `code`, `published_date`, `file_path`) VALUES
+(1, 'Sprawozdanie - 2025', 'Opublikowano', 'HTWUITHYJK', '2025-02-20', '../license'),
+(2, 'Sprawozdanie - 2024', 'Opublikowano', 'HNGBBJUKO', '2024-02-02', '../license'),
+(3, 'Sprawozdanie - 2023', 'Opublikowano', 'FYEQPALGTF', '2023-01-17', '../license'),
+(4, 'Sprawozdanie - 2022', 'Opublikowano', 'NMGFDORPI', '2022-02-18', '../license'),
+(5, 'Sprawozdanie - 2021', 'Opublikowano', 'BZXCFRKIOF', '2021-01-10', '../license'),
+(6, 'Sprawozdanie - 2020', 'Opublikowano', 'KJFURTDPGY', '2020-02-15', '../license'),
+(7, 'Sprawozdanie - 2019', 'Opublikowano', 'HHWQTYGFP', '2019-01-25', '../license');
 
 -- --------------------------------------------------------
 
@@ -227,6 +280,18 @@ ALTER TABLE `campaigns`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indeksy dla tabeli `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indeksy dla tabeli `reports`
+--
+ALTER TABLE `reports`
+  ADD PRIMARY KEY (`report_id`);
+
+--
 -- Indeksy dla tabeli `statuses`
 --
 ALTER TABLE `statuses`
@@ -256,13 +321,25 @@ ALTER TABLE `types`
 -- AUTO_INCREMENT for table `accounts`
 --
 ALTER TABLE `accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `campaigns`
 --
 ALTER TABLE `campaigns`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `reports`
+--
+ALTER TABLE `reports`
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `statuses`
